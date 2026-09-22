@@ -6,7 +6,7 @@
 
 A free, book-length guide to how modern LLM systems actually work — RAG, fine-tuning, agents, and where your data goes — written for people who need to understand these systems without reading the papers or writing the code.
 
-**📖 Read it online, free:** [llmknowledge.pages.dev](https://llmknowledge.pages.dev) · 中文版：[llmknowledge.pages.dev/zh/](https://llmknowledge.pages.dev/zh/)
+**📖 Read it online, free:** [llmknowledge1.pages.dev](https://llmknowledge1.pages.dev) · 中文版：[llmknowledge1.pages.dev/zh/](https://llmknowledge1.pages.dev/zh/)
 
 ---
 
@@ -26,15 +26,15 @@ If you work on LLM training or inference optimization, this will read as introdu
 
 | | Chapter |
 | --- | --- |
-| [Before We Begin](https://llmknowledge.pages.dev/) | What problem is this system solving? |
-| [Chapter 1](https://llmknowledge.pages.dev/ch1.html) | The RAG pipeline — how a question becomes a cited answer |
-| [Chapter 2](https://llmknowledge.pages.dev/ch2.html) | Adapting a model — fine-tuning vs. RAG, and what each one fixes |
-| [Chapter 3](https://llmknowledge.pages.dev/ch3.html) | Four core mechanisms — embeddings, retrieval, serving, architecture |
-| [Chapter 4](https://llmknowledge.pages.dev/ch4.html) | Agents — function calling, MCP, memory, and where they break |
-| [Chapter 5](https://llmknowledge.pages.dev/ch5.html) | A compliance view — where confidential data actually goes |
-| [Chapter 6](https://llmknowledge.pages.dev/ch6.html) | Beyond RAG — the landscape, organized by what the model is missing |
-| [Appendix](https://llmknowledge.pages.dev/appendix.html) | Toolkit overview |
-| [Quick Reference](https://llmknowledge.pages.dev/cheatsheet.html) | The whole guide on one page |
+| [Before We Begin](https://llmknowledge1.pages.dev/) | What problem is this system solving? |
+| [Chapter 1](https://llmknowledge1.pages.dev/ch1.html) | The RAG pipeline — how a question becomes a cited answer |
+| [Chapter 2](https://llmknowledge1.pages.dev/ch2.html) | Adapting a model — fine-tuning vs. RAG, and what each one fixes |
+| [Chapter 3](https://llmknowledge1.pages.dev/ch3.html) | Four core mechanisms — embeddings, retrieval, serving, architecture |
+| [Chapter 4](https://llmknowledge1.pages.dev/ch4.html) | Agents — function calling, MCP, memory, and where they break |
+| [Chapter 5](https://llmknowledge1.pages.dev/ch5.html) | A compliance view — where confidential data actually goes |
+| [Chapter 6](https://llmknowledge1.pages.dev/ch6.html) | Beyond RAG — the landscape, organized by what the model is missing |
+| [Appendix](https://llmknowledge1.pages.dev/appendix.html) | Toolkit overview |
+| [Quick Reference](https://llmknowledge1.pages.dev/cheatsheet.html) | The whole guide on one page |
 
 ## What makes it different
 

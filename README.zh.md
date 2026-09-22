@@ -6,7 +6,7 @@
 
 一本免费的、完整篇幅的指南，讲清楚现代大语言模型系统到底怎么运作——RAG、微调、Agent，以及你的数据去了哪里。写给需要理解这些系统、但不打算读论文也不打算写代码的人。
 
-**📖 免费在线阅读：**[llmknowledge.pages.dev/zh/](https://llmknowledge.pages.dev/zh/) · English: [llmknowledge.pages.dev](https://llmknowledge.pages.dev)
+**📖 免费在线阅读：**[llmknowledge1.pages.dev/zh/](https://llmknowledge1.pages.dev/zh/) · English: [llmknowledge1.pages.dev](https://llmknowledge1.pages.dev)
 
 ---
 
@@ -26,15 +26,15 @@
 
 | | 章节 |
 | --- | --- |
-| [开始之前](https://llmknowledge.pages.dev/zh/) | 这个系统在解决什么问题 |
-| [第一章](https://llmknowledge.pages.dev/zh/ch1.html) | RAG 核心流程——一个问题如何变成带出处的回答 |
-| [第二章](https://llmknowledge.pages.dev/zh/ch2.html) | 模型适配——微调与 RAG，各自解决什么问题 |
-| [第三章](https://llmknowledge.pages.dev/zh/ch3.html) | 四个核心机制——嵌入、检索、推理服务、系统架构 |
-| [第四章](https://llmknowledge.pages.dev/zh/ch4.html) | Agent——函数调用、MCP、记忆，以及它会在哪里出问题 |
-| [第五章](https://llmknowledge.pages.dev/zh/ch5.html) | 合规视角——机密数据到底去了哪里 |
-| [第六章](https://llmknowledge.pages.dev/zh/ch6.html) | RAG 之外——按「模型缺什么」组织的全景 |
-| [附录](https://llmknowledge.pages.dev/zh/appendix.html) | 工具库概览 |
-| [速记卡片](https://llmknowledge.pages.dev/zh/cheatsheet.html) | 整本书浓缩在一页里 |
+| [开始之前](https://llmknowledge1.pages.dev/zh/) | 这个系统在解决什么问题 |
+| [第一章](https://llmknowledge1.pages.dev/zh/ch1.html) | RAG 核心流程——一个问题如何变成带出处的回答 |
+| [第二章](https://llmknowledge1.pages.dev/zh/ch2.html) | 模型适配——微调与 RAG，各自解决什么问题 |
+| [第三章](https://llmknowledge1.pages.dev/zh/ch3.html) | 四个核心机制——嵌入、检索、推理服务、系统架构 |
+| [第四章](https://llmknowledge1.pages.dev/zh/ch4.html) | Agent——函数调用、MCP、记忆，以及它会在哪里出问题 |
+| [第五章](https://llmknowledge1.pages.dev/zh/ch5.html) | 合规视角——机密数据到底去了哪里 |
+| [第六章](https://llmknowledge1.pages.dev/zh/ch6.html) | RAG 之外——按「模型缺什么」组织的全景 |
+| [附录](https://llmknowledge1.pages.dev/zh/appendix.html) | 工具库概览 |
+| [速记卡片](https://llmknowledge1.pages.dev/zh/cheatsheet.html) | 整本书浓缩在一页里 |
 
 ## 和其他资料的区别
 
