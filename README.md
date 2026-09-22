@@ -1,64 +1,56 @@
-# 理解现代大语言模型系统-从RAG到全景（在线阅读站）
+# Understanding Modern LLM Systems
 
-从 `content/` 里的中英文 Markdown 自动生成「一章一页」的多页静态阅读站，输出到 `site/`（英文，根路径）和 `site/zh/`（中文）。
+### A Field Guide to RAG, Agents, and Beyond
 
-## 目录结构
+[English](README.md) · [中文](README.zh.md)
 
-```
-.
-├─ content/
-│   ├─ 理解现代LLM系统_从RAG到全景.md      ← 中文内容源
-│   └─ 理解现代LLM系统_从RAG到全景.en.md   ← 英文内容源（与中文一一对应）
-├─ build.py                              ← 生成脚本（读 content，输出 site，中英文各一份）
-├─ requirements.txt                      ← 依赖（markdown）
-├─ .gitignore                            ← 忽略 site/（由构建生成，不入库）
-└─ README.md
-```
+A free, book-length guide to how modern LLM systems actually work — RAG, fine-tuning, agents, and where your data goes — written for people who need to understand these systems without reading the papers or writing the code.
 
-## 本地预览（可选）
+**📖 Read it online, free:** [llmknowledge.pages.dev](https://llmknowledge.pages.dev) · 中文版：[llmknowledge.pages.dev/zh/](https://llmknowledge.pages.dev/zh/)
 
-```bash
-pip install -r requirements.txt
-python build.py
-# 打开 site/index.html 看英文版，site/zh/index.html 看中文版
-# 侧栏「中文 / EN」按钮可以在两个语言版本间跳转到同一章节
-```
+---
 
-## 怎么修改内容
+## Who it's for
 
-**中文**改 `content/理解现代LLM系统_从RAG到全景.md`，**英文**改 `content/理解现代LLM系统_从RAG到全景.en.md`。
+- Product managers, solutions and sales engineers, and anyone moving into an AI-adjacent role
+- People who review AI projects for security or compliance
+- Anyone who keeps hearing "RAG", "agents" and "MCP" in meetings and wants one coherent map instead of scattered fragments
 
-两份文件都用 `##` 开头的行分节，脚本按「第几节」（而不是标题文字）判断章节类型——第 1 节固定是前言，最后 2 节固定是附录、速记卡片，中间全部是编号章节。**因此两份文件的分节数量和顺序必须严格一一对应**，否则中英文章节会错位。改完重新 `python build.py` 即可；接入下面的自动部署后，`git push` 就会自动重建。
+No math or programming background is needed.
 
-## URL 结构
+## Who it's not for
 
-- 英文在根路径（`/`、`/ch1`、`/ch3`…）
-- 中文在 `/zh/` 前缀下（`/zh/`、`/zh/ch1`、`/zh/ch3`…）
-- 每页 `<head>` 里带 `hreflang` 互链标注（`x-default` 指向英文根路径），方便搜索引擎识别中英文对应关系
-- 旧版英文在 `/en/` 前缀下，`_redirects` 里有一条 `/en/* → /:splat` 把旧链接跳到新位置；旧版中文根路径（`/`、`/ch1`…）**无法**重定向到 `/zh/`——这些路径现在被新的英文页面复用，_redirects 的匹配发生在静态文件之前，写规则会连新英文页面一起跳走。访问这些旧中文书签的人会直接看到对应的英文页
+If you work on LLM training or inference optimization, this will read as introductory. It explains how the systems fit together; it does not teach implementation.
 
-## 换付费出站链接
+## Contents
 
-打开 `build.py`，找到 `SHORT_LINKS` 字典，里面是每个入口位置对应的固定短链（`ymjr.de/llmbook-*`）。网站代码只放短链本身，不拼 UTM 参数——短链跳到 Gumroad 商品页时带什么 UTM，是在短链服务那端配置的。中文页面末尾（ch6/appendix/cheatsheet）目前故意不放链接，因为还没有对应入口。改完 `SHORT_LINKS` 里的值，重新构建即可全站生效。
+| | Chapter |
+| --- | --- |
+| [Before We Begin](https://llmknowledge.pages.dev/) | What problem is this system solving? |
+| [Chapter 1](https://llmknowledge.pages.dev/ch1.html) | The RAG pipeline — how a question becomes a cited answer |
+| [Chapter 2](https://llmknowledge.pages.dev/ch2.html) | Adapting a model — fine-tuning vs. RAG, and what each one fixes |
+| [Chapter 3](https://llmknowledge.pages.dev/ch3.html) | Four core mechanisms — embeddings, retrieval, serving, architecture |
+| [Chapter 4](https://llmknowledge.pages.dev/ch4.html) | Agents — function calling, MCP, memory, and where they break |
+| [Chapter 5](https://llmknowledge.pages.dev/ch5.html) | A compliance view — where confidential data actually goes |
+| [Chapter 6](https://llmknowledge.pages.dev/ch6.html) | Beyond RAG — the landscape, organized by what the model is missing |
+| [Appendix](https://llmknowledge.pages.dev/appendix.html) | Toolkit overview |
+| [Quick Reference](https://llmknowledge.pages.dev/cheatsheet.html) | The whole guide on one page |
 
-## 部署到 Cloudflare Pages（Git 自动构建）
+## What makes it different
 
-在 Cloudflare Pages 里连接本仓库，构建设置：
+- **Built on primary sources.** 11 footnotes point to the original papers and official documentation, so every non-obvious claim can be traced back and checked.
+- **7 original diagrams.** Each system is drawn once, clearly, instead of described in paragraphs.
+- **One running example.** A single scenario threads through every chapter, so each new concept lands in a context you already know.
+- **Two complete editions.** English and Chinese, same content.
 
-- **构建命令 / Build command**：`pip install -r requirements.txt && python build.py`
-- **输出目录 / Build output directory**：`site`
-- **框架预设 / Framework preset**：None（无）
+## License
 
-连接后，每次 `git push`，Cloudflare 会自动跑上面的命令、重新生成页面并部署。
+Text and diagrams are licensed under [CC BY-NC-ND 4.0](LICENSE). You're free to read and share it with attribution; commercial use and derivative works are not permitted.
 
-## 日常工作流
+## Support
 
-```bash
-# 改完 content/ 里的 Markdown 后：
-git add -A
-git commit -m "更新：说明改了啥"
-git push
-# → Cloudflare 自动重建并上线，几十秒后线上就是最新版
-```
+If this guide helped you, a ⭐ helps other people find it. Corrections are welcome — please open an issue.
 
-Git 同时也是版本管理：每次提交都有记录，可随时回看历史、回滚到任意版本。
+A typeset PDF + EPUB edition is available on [Gumroad](https://fallacy04.gumroad.com/l/llm-systems-field-guide).
+
+— koe
