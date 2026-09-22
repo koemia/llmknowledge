@@ -2,3 +2,7 @@ site/
 __pycache__/
 *.pyc
 .DS_Store
+build.py
+requirements.txt
+_redirects
+DEVELOPMENT.md
