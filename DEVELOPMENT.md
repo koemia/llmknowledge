@@ -11,8 +11,11 @@
 │   └─ 理解现代LLM系统_从RAG到全景.en.md   ← 英文内容源（与中文一一对应）
 ├─ build.py                              ← 生成脚本（读 content，输出 site，中英文各一份）
 ├─ requirements.txt                      ← 依赖（markdown）
+├─ _redirects                            ← Cloudflare Pages 重定向规则，构建时复制进 site/
 ├─ .gitignore                            ← 忽略 site/（由构建生成，不入库）
-└─ README.md
+├─ README.md                             ← 英文读者说明
+├─ README.zh.md                          ← 中文读者说明
+└─ LICENSE                               ← CC BY-NC-ND 4.0
 ```
 
 ## 本地预览（可选）
@@ -36,10 +39,6 @@ python build.py
 - 中文在 `/zh/` 前缀下（`/zh/`、`/zh/ch1`、`/zh/ch3`…）
 - 每页 `<head>` 里带 `hreflang` 互链标注（`x-default` 指向英文根路径），方便搜索引擎识别中英文对应关系
 - 旧版英文在 `/en/` 前缀下，`_redirects` 里有一条 `/en/* → /:splat` 把旧链接跳到新位置；旧版中文根路径（`/`、`/ch1`…）**无法**重定向到 `/zh/`——这些路径现在被新的英文页面复用，_redirects 的匹配发生在静态文件之前，写规则会连新英文页面一起跳走。访问这些旧中文书签的人会直接看到对应的英文页
-
-## 换付费出站链接
-
-打开 `build.py`，找到 `SHORT_LINKS` 字典，里面是每个入口位置对应的固定短链（`ymjr.de/llmbook-*`）。网站代码只放短链本身，不拼 UTM 参数——短链跳到 Gumroad 商品页时带什么 UTM，是在短链服务那端配置的。中文页面末尾（ch6/appendix/cheatsheet）目前故意不放链接，因为还没有对应入口。改完 `SHORT_LINKS` 里的值，重新构建即可全站生效。
 
 ## 部署到 Cloudflare Pages（Git 自动构建）
 
