@@ -191,7 +191,7 @@ TEMPLATE = r'''<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="google-site-verification" content="mN09xIJaqJy7jMjo_Z9wPwu4Od0xNoTZgLP8owVbxg8">
+<meta name="google-site-verification" content="N-Eq_2c5aG0rHDGOkAvz7jPIxSpWsmKo1mIh6O4yZ1U">
 <title>__PAGE_TITLE__</title>
 __HREFLANG__
 <link rel="preconnect" href="https://fonts.googleapis.com">
