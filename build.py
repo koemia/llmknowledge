@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import re, markdown, html, os, shutil
+from datetime import date
+
+BASE_URL = "https://llmknowledge.pages.dev"
 
 # ===== 语言配置：新增语言只需在这里加一个条目 =====
 # links: 从本语言页面跳到目标语言同一章节页面的相对路径前缀
@@ -38,6 +41,32 @@ LANGS = {
         switch_label="EN",
         links={"zh": "zh/", "en": ""},
     ),
+}
+
+# ===== llms.txt / sitemap 用的每章一句话简介（与 README 表格口径一致）=====
+DESCRIPTIONS = {
+    "en": {
+        "preface": "What problem is this system solving?",
+        "ch1": "The RAG pipeline — how a question becomes a cited answer",
+        "ch2": "Adapting a model — fine-tuning vs. RAG, and what each one fixes",
+        "ch3": "Four core mechanisms — embeddings, retrieval, serving, architecture",
+        "ch4": "Agents — function calling, MCP, memory, and where they break",
+        "ch5": "A compliance view — where confidential data actually goes",
+        "ch6": "Beyond RAG — the landscape, organized by what the model is missing",
+        "appendix": "Toolkit overview",
+        "cheatsheet": "The whole guide on one page",
+    },
+    "zh": {
+        "preface": "这个系统在解决什么问题",
+        "ch1": "RAG 核心流程——一个问题如何变成带出处的回答",
+        "ch2": "模型适配——微调与 RAG，各自解决什么问题",
+        "ch3": "四个核心机制——嵌入、检索、推理服务、系统架构",
+        "ch4": "Agent——函数调用、MCP、记忆，以及它会在哪里出问题",
+        "ch5": "合规视角——机密数据到底去了哪里",
+        "ch6": "RAG 之外——按「模型缺什么」组织的全景",
+        "appendix": "工具库概览",
+        "cheatsheet": "整本书浓缩在一页里",
+    },
 }
 
 # 付费出站短链：每个入口位置一条固定短链，UTM/最终跳转目标在短链服务那端配置，
@@ -108,6 +137,14 @@ def fname(sec_id):
     return "index.html" if sec_id == "preface" else sec_id + ".html"
 
 
+def url_for(cfg, sec_id):
+    """首页用干净的 / 或 /zh/，其余页面用 /chN.html 这种实际文件名。"""
+    fn = fname(sec_id)
+    if fn == "index.html":
+        return BASE_URL + cfg["url_prefix"]
+    return BASE_URL + cfg["url_prefix"] + fn
+
+
 def parse_sections(src_path):
     raw = open(src_path, encoding="utf-8").read()
     lines = raw.split("\n")
@@ -154,6 +191,7 @@ TEMPLATE = r'''<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google-site-verification" content="mN09xIJaqJy7jMjo_Z9wPwu4Od0xNoTZgLP8owVbxg8">
 <title>__PAGE_TITLE__</title>
 __HREFLANG__
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -493,11 +531,11 @@ def lang_switch_html(current_lang, sec_id):
 
 def hreflang_tags(sec_id):
     tags = []
-    for lang_key, cfg in LANGS.items():
-        tags.append('<link rel="alternate" hreflang="%s" href="%s%s">'
-                     % (cfg["lang_code"], cfg["url_prefix"], fname(sec_id)))
-    tags.append('<link rel="alternate" hreflang="x-default" href="%s%s">'
-                 % (LANGS["en"]["url_prefix"], fname(sec_id)))
+    for cfg in LANGS.values():
+        tags.append('<link rel="alternate" hreflang="%s" href="%s">'
+                     % (cfg["lang_code"], url_for(cfg, sec_id)))
+    tags.append('<link rel="alternate" hreflang="x-default" href="%s">'
+                 % url_for(LANGS["en"], sec_id))
     return "\n".join(tags)
 
 
@@ -576,7 +614,70 @@ def build_lang(lang_key):
         out = re.sub(r"</table>", "</table></div>", out)
         open(os.path.join(outdir, fname(s["id"])), "w", encoding="utf-8").write(out)
 
-    return len(sections)
+    # 给 AI/LLM 抓取用的全文纯文本版（原始 Markdown 源文件，逐字复制）
+    shutil.copy(cfg["src"], os.path.join(outdir, "llms-full.txt"))
+
+    return sections
+
+
+def write_sitemap(sections_by_lang):
+    today = date.today().isoformat()
+    ids = [s["id"] for s in sections_by_lang["en"]]  # 各语言章节一一对应，用英文版的顺序即可
+    blocks = []
+    for sec_id in ids:
+        for cfg in LANGS.values():
+            alt = ['    <xhtml:link rel="alternate" hreflang="%s" href="%s"/>'
+                   % (lc["lang_code"], url_for(lc, sec_id)) for lc in LANGS.values()]
+            alt.append('    <xhtml:link rel="alternate" hreflang="x-default" href="%s"/>'
+                        % url_for(LANGS["en"], sec_id))
+            blocks.append(
+                "  <url>\n    <loc>%s</loc>\n    <lastmod>%s</lastmod>\n%s\n  </url>"
+                % (url_for(cfg, sec_id), today, "\n".join(alt))
+            )
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        'xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
+        + "\n".join(blocks) + "\n</urlset>\n"
+    )
+    open("site/sitemap.xml", "w", encoding="utf-8").write(xml)
+
+
+def write_robots():
+    txt = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "\n"
+        "Sitemap: %s/sitemap.xml\n" % BASE_URL
+    )
+    open("site/robots.txt", "w", encoding="utf-8").write(txt)
+
+
+def write_llms_txt(sections_by_lang):
+    lines = [
+        "# Understanding Modern LLM Systems: A Field Guide to RAG, Agents, and Beyond",
+        "",
+        "> A free, book-length guide to how modern LLM systems actually work — RAG, "
+        "fine-tuning, agents, and where your data goes. Written for people who need to "
+        "understand these systems without reading the papers or writing the code. No "
+        "math or programming background required.",
+        "",
+        "Also available in Chinese (中文版) under /zh/. Licensed CC BY-NC-ND 4.0 — free "
+        "to read and share; not for commercial reuse or derivative works without "
+        "permission.",
+        "",
+    ]
+    for lang_key in ("en", "zh"):
+        cfg = LANGS[lang_key]
+        heading = "## English" if lang_key == "en" else "## 中文"
+        lines.append(heading)
+        for s in sections_by_lang[lang_key]:
+            desc = DESCRIPTIONS[lang_key].get(s["id"], "")
+            lines.append("- [%s](%s): %s" % (s["title"], url_for(cfg, s["id"]), desc))
+        lines.append("- [Full text, single file](%s/llms-full.txt)"
+                      % (BASE_URL + cfg["url_prefix"].rstrip("/")))
+        lines.append("")
+    open("site/llms.txt", "w", encoding="utf-8").write("\n".join(lines).rstrip() + "\n")
 
 
 # ---- 多语言输出：site/ 是英文（根路径），site/zh/ 是中文 ----
@@ -588,9 +689,16 @@ if os.path.isfile("_redirects"):
     shutil.copy("_redirects", os.path.join("site", "_redirects"))
 
 total = 0
+sections_by_lang = {}
 for lang_key in LANGS:
-    n = build_lang(lang_key)
-    total += n
-    print("built %d pages -> %s/" % (n, LANGS[lang_key]["outdir"]))
+    sections = build_lang(lang_key)
+    sections_by_lang[lang_key] = sections
+    total += len(sections)
+    print("built %d pages -> %s/" % (len(sections), LANGS[lang_key]["outdir"]))
+
+write_sitemap(sections_by_lang)
+write_robots()
+write_llms_txt(sections_by_lang)
+print("wrote sitemap.xml, robots.txt, llms.txt")
 
 print("total %d pages" % total)
