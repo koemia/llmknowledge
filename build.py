@@ -429,6 +429,9 @@ a:hover{color:var(--accent-ink)}
 }
 </style>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="398cb9ae-aed6-4239-a477-6c3ec00120a0"></script>
+<!-- Cloudflare Web Analytics -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "1c605389c0f74b35815e02350867239b"}'></script>
+<!-- End Cloudflare Web Analytics -->
 </head>
 <body>
 <div id="progress"></div>
