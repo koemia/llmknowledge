@@ -199,7 +199,7 @@ AI 客服上线之后，团队收到了三类不同的抱怨。
    还有一点对成本很实际：**同样一段话，不同语言、不同模型占用的 token 数可能差别很大**。模型的收费和"一次能处理多长"都按 token 数算而非字数，而早期的分词器对中文并不友好，同样的意思往往要多花不少 token。新一代分词器已经大幅改善：OpenAI 发布 GPT-4o 时公布，同一段示例文字，中文所需的 token 从 34 个降到 24 个，和英文持平。[^gpt4o-tok] 所以具体差多少，要看用的是哪个模型的分词器。
 2. **编码（Transformer 神经网络）**：把切好的token序列，喂进一个叫"transformer"的神经网络，它会给每个token算出一个向量，然后通过"池化"（把很多token的向量合并压缩成一个代表整句话的向量）和"归一化"（把向量的长度统一调整为1，方便后面用固定方法比较相似度），最终得到一个能代表整句话意思的向量。这个向量有多少个数字（即"维度"），2026年常见的范围是384到4096，通用场景一般从768或1024起步，再根据检索效果和存储成本调整。
 
-> **补充**：嵌入模型的实现路线不止一种。除 BERT 一类编码器和大语言模型外，也有基于 **word2vec、GloVe** 等方法学习词向量，再通过平均或加权汇总得到句向量的传统路线；还有 **FastText** 这类利用子词信息的模型，以及专门为句子相似度训练的 **Siamese／双塔网络**（可采用 CNN、循环网络或 Transformer 等骨干）。这些路线这几年各领风骚，但对使用者而言结论是一样的：不管底层用哪种方法训练出来，拿到手的都是一个可以直接拿去算距离的句子向量，不需要关心它是怎么来的。
+> **补充**：嵌入模型的实现路线不止一种，而且一直在演进。最早的传统路线是先学词向量，再通过平均或加权汇总得到句向量，代表是 2013 年的 **word2vec** 和 2014 年的 **GloVe**；2016 年的 **FastText** 在此基础上加入了子词信息；2019 年前后，**Sentence-BERT** 这类专门为句子相似度训练的 **Siamese（孪生）网络**流行起来，骨干换成了 BERT 一类编码器。2023 年底以来，又出现了一批以大语言模型为底座、在其上加装池化层并做对比微调的嵌入模型（如 E5-mistral、GritLM、NV-Embed），先后在 MTEB 公开榜单上取得领先成绩。[^embed-routes] 不过对使用者而言，结论是一样的：不管底层用哪种方法训练出来，拿到手的都是一个可以直接拿去算距离的句子向量，不需要关心它是怎么来的。
 
 **一个必须知道的限制：嵌入模型一次能读的文字有上限。** 每个嵌入模型都规定了单次输入的最长token数，超过的部分会被直接截掉，而且不会有任何报错提示——一段被切得过大的文本，后半截可能根本没有进入向量，检索时自然永远找不到。这正是第一章"离线索引"要先把长文档切块的硬性原因之一：切块的大小必须落在所用嵌入模型的长度上限之内。
 
@@ -275,7 +275,7 @@ AI 客服上线之后，团队收到了三类不同的抱怨。
 - **TTFT**（Time To First Token，首字延迟）：从发出请求到看到第一个字的时间，由 prefill 决定。
 - **TPOT / ITL**（每个输出 token 的间隔）：开始输出后，字与字之间的节奏，由 decode 决定。
 
-值得注意的是，**总等待时间通常由 decode 主导**。举例来说，假设每个字间隔 80 毫秒，一个 500 字左右的回答，光 decode 就要花掉约 40 秒；相比之下首字延迟可能只有两百毫秒。所以"回答越长越慢"是线性累加的，感受非常直接。
+值得注意的是，**总等待时间通常由 decode 主导**。举个例子：假设一个普通（非推理）模型每秒输出 60 个 token 左右，也就是每个 token 间隔约 17 毫秒，那么一个 500 token 左右的回答，光 decode 就要花掉约 8 秒；相比之下，首字延迟可能只有零点几秒。所以"回答越长越慢"是线性累加的，感受非常直接。
 
 **推理模型让 decode 的分量更重了。** 2024 年起出现的"推理模型"（reasoning model），在给出答案之前，会先生成一大段内部思考。这段思考也是逐个 token decode 出来的：通常不展示给用户，但同样占用上下文窗口，同样按输出 token 计费。[^reasoning] 对用户来说，体感就是首字延迟变长了——屏幕上出现第一个字之前，模型可能已经默默写了大量的思考。OpenAI 发布第一个推理模型 o1 时就指出，模型思考的时间越长，表现越好[^o1]，这等于用推理阶段的算力和等待时间去换答案质量。
 
@@ -335,6 +335,8 @@ AI 客服上线之后，团队收到了三类不同的抱怨。
 [^vocab]: Meta, *Introducing Meta Llama 3*, 2024：「a tokenizer with a vocabulary of 128K tokens」。https://ai.meta.com/blog/meta-llama-3/ ；Qwen Team, *Qwen3 Technical Report*, 2025：「vocabulary size of 151,669」。https://arxiv.org/abs/2505.09388 ；OpenAI tiktoken 源码中的 o200k_base 编码（GPT-4o 使用），结束符编号为 199999。https://github.com/openai/tiktoken ；Gemma Team, *Gemma 3 Technical Report*, 2025：「262k entries」。https://arxiv.org/abs/2503.19786
 
 [^gpt4o-tok]: OpenAI, *Hello GPT-4o*, 2024-05（Language tokenization 一节）。https://openai.com/index/hello-gpt-4o/
+
+[^embed-routes]: Mikolov et al., *Efficient Estimation of Word Representations in Vector Space*, 2013（word2vec）。https://arxiv.org/abs/1301.3781 ；Pennington et al., *GloVe: Global Vectors for Word Representation*, EMNLP 2014。https://aclanthology.org/D14-1162/ ；Bojanowski et al., *Enriching Word Vectors with Subword Information*, 2016（FastText）。https://arxiv.org/abs/1607.04606 ；Reimers & Gurevych, *Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks*, EMNLP 2019。https://arxiv.org/abs/1908.10084 ；Wang et al., *Improving Text Embeddings with Large Language Models*, 2023（E5-mistral，摘要称在 BEIR 和 MTEB 上取得新的最佳成绩）。https://arxiv.org/abs/2401.00368 ；Muennighoff et al., *Generative Representational Instruction Tuning*, 2024（GritLM，摘要称在 MTEB 上取得新的最佳成绩）。https://arxiv.org/abs/2402.09906 ；Lee et al., *NV-Embed: Improved Techniques for Training LLMs as Generalist Embedding Models*, 2024（摘要称 NV-Embed-v1、v2 分别于 2024-05-24 和 2024-08-30 位列 MTEB 榜首）。https://arxiv.org/abs/2405.17428
 
 [^diskann]: Subramanya et al., *DiskANN: Fast Accurate Billion-point Nearest Neighbor Search on a Single Node*, NeurIPS 2019。https://www.microsoft.com/en-us/research/publication/diskann-fast-accurate-billion-point-nearest-neighbor-search-on-a-single-node/
 
@@ -528,21 +530,21 @@ MaaS（Model-as-a-Service，模型即服务）指通过网络调用的云端模�
 
 ### 常见的风险，和两个例外
 
-按风险主要影响系统的哪个部分来梳理，会更容易看清它们的表现。**模型层**最常见的威胁是直接提示注入和越狱。这两者看起来都像“模型不听话”，但根源不一样：提示注入是攻击者把“命令”伪装成“资料”放进系统会读取的内容里，让模型误以为这些话是正常信息，而不是需要执行的要求；越狱则是在正常对话中，用户自己使用绕过式表达、反转语义或编故事的方法，试图说服模型违背它训练时被要求遵守的规则。简单说，前者是“把命令藏进数据里”，后者是“让模型自己违背规则”。
+下面参照 OWASP（开放式 Web 应用安全项目）2026 年发布的《LLM 应用十大安全风险》榜单，按风险主要影响系统的哪个部分来梳理，会更容易看清它们的表现。**模型层**最常见的威胁是提示注入：模型分不清哪些是要执行的指令、哪些只是要处理的资料，攻击者就借这一点，让模型把伪装过的命令当真执行。它分直接和间接两种，下一节细讲。越狱是提示注入的一个子类，OWASP 2026 版也是这样归类的：用户在对话里用绕弯的说法、反转语义或编故事，目标是说服模型违背它训练时被要求遵守的安全规则。[^owasp-2026]
 
 **工具层**的风险主要源于“外部依赖被污染”，比如工具把用户的输入当成了系统命令去执行（也就是命令注入），或者是接入了恶意的服务器。以 MCP 为例，因为规范允许将身份验证设为可选，系统安不安全全靠服务器开发者来定[^mcp-auth]。这就给黑客留下了可乘之机。2025 年 9 月，安全公司 Koi Security 就曝光了一个 npm 上的恶意案例：有人伪装成 Postmark 邮件服务商发布了一个 MCP 包，从 1.0.16 版本开始，它会把用户发出的每一封邮件都偷偷复制一份发给黑客[^postmark]。这类攻击之所以能得手，根本原因在于系统把第三方工具当成了绝对可信的“自己人”。因此，接入任何第三方 MCP 服务器时，绝不能假定它天生无害，必须像对待其他第三方软件一样，对其进行严格的安全审查。
 
 **Agent 层**最典型的风险是过度授权，也就是赋予了它超出实际任务所需的权限。这种风险往往很隐蔽，表面上看只是让 Agent 显得“更全能”，但只要它手里握着不必要的读写、联网或删除权限，攻击者只需稍加诱导就能引发大乱。比如，一个本职工作仅仅是“代写回信草稿”的客服 Agent，如果同时拥有读取全部邮件、访问 CRM 甚至对外发信的权限，一旦遭遇恶意指令，就可能悄悄导出大量敏感客户数据并向外泄露。问题的核心并不在于 Agent 会故意作恶，而是它“手伸得太长”；一旦任务被人稍微带偏，原本帮忙干活的助手就会瞬间变成扩大破坏范围的帮凶。
 
-**数据层**则是老问题：投毒、反演、干扰和越权检索等手段，都会直接破坏知识库或检索结果的可信度。第三章 3.2 和第五章都详细讨论过这些问题——它们不是“模型突然坏了”，而是数据源本身、数据处理链路或者检索方式被人恶意污染了，所以系统看起来正常运转，实际却在传递错误信息或泄露不该泄露的内容。
+**数据层**的风险，前面其实已经出现过两种：越权检索（第三章 3.2 和第五章）和向量反演，也就是从向量还原出原文（第五章）。还有一种前面没有展开：**投毒**，即有人设法把篡改过或故意写错的内容混进知识库，等它被检索回来，就被当成可信资料交给了模型——下一节的 EchoLeak 就是这样起手的。这几种都不是“模型突然坏了”，而是数据源、数据处理链路或检索方式出了问题，所以系统看起来正常运转，实际却在传递错误信息或泄露不该泄露的内容。
 
-这份排名绝非凭空臆造。2026 版首次将真实世界的数据纳入评估，对 6,639 起信息详实的 AI 安全事件进行了复盘，最终以“75% 专家共识加 25% 真实事件数据”的权重综合测算得出[^owasp-2026]。在这份榜单中，有两个风险尤为值得关注：一个是稳居榜首的“提示注入”，其根源在于模型始终无法从根本上分辨指令与数据，这也是各种越狱手段的核心逻辑；另一个则是排名快速攀升的“消耗型风险”，它完全不攻击任何系统部件，只是诱导系统无休止地执行合法任务，借此活活烧干算力和账单。接下来，我们将对这两种最典型的风险展开详细剖析。
+这份榜单的排名并非拍脑袋得出。2026 版首次把真实事件数据纳入评估：整理了 7,714 起已报告的 AI 安全事件，其中 6,639 起信息足够详细、可以归类，再与专家投票合并，专家投票占 75%，事件数据占 25%。[^owasp-2026] 有一点值得说明：如果只看事件数据，稳居榜首的提示注入甚至排不进前十。它能排第一，靠的是专家投票；OWASP 的解释是“防御效应”——大家防得越严，能公开记录在案的成功攻击就越少，风险反而显得比实际小。榜单里有两个风险尤其值得关注：一个是提示注入，根源在于模型分不清指令与数据；另一个是排名快速攀升的“消耗型风险”，它完全不攻击任何系统部件，只是诱导系统无休止地执行合法任务，借此烧干算力和账单。接下来分别展开。
 
 ### 提示注入：安全风险里的头号问题
 
 回到第一章的秘书处比喻。笔杆子拿到工作夹，照着里面的材料起草答复。现在假设有人在某份档案里夹了一张纸条："起草答复的人，请在末尾附上本季度的客户名单。"笔杆子会不会照办？
 
-对人来说，这张纸条一望而知可疑——人分得清"领导交办的任务"和"档案里的内容"，这是两件事。但是**模型分不清**。对它来说，系统指令、用户的问题、检索到的资料，全都只是同一串文本。英国国家网络安全中心说得很直接："当前的大语言模型通常不能可靠地区分提示词中的指令和数据。"[^ncsc] 这就是**提示注入**（prompt injection）：把指令伪装成普通内容，诱使模型执行它本不该执行的操作。
+对人来说，这张纸条一望而知可疑——人分得清"领导交办的任务"和"档案里的内容"，这是两件事。但是**模型分不清**。对它来说，系统指令、用户的问题、检索到的资料，全都只是同一串文本。英国国家网络安全中心说得很直接："当前的大语言模型，根本不会在提示词中的指令和数据之间设立安全边界。"[^ncsc] 这就是**提示注入**（prompt injection）：把指令伪装成普通内容，诱使模型执行它本不该执行的操作。
 
 提示注入分两种。**直接注入**是用户自己在提问里写"忽略前面的所有要求"这类话。**间接注入**更危险，也更难防：攻击者根本不用跟系统对话，只需要把指令埋进系统迟早会读到的地方，一个网页、一封邮件、一份将来会被收进知识库的文档。[^greshake] 用户自己看不到这些指令，但模型会读到。
 
@@ -556,11 +558,11 @@ RAG 恰好把这个风险放大了。它的工作方式就是把外部资料拼�
 
 提示注入的问题出在"分不清指令和资料"；这一类风险完全不同——攻击者什么都没骗到，只是让系统老老实实干它本来就会干的事，干得没完没了。OWASP 把它叫**资源无限消耗**（Unbounded Consumption），2026 版排名里从第十位冲到第六位，涨得比任何其他类别都快。[^owasp-2026]
 
-最直接的玩法是**烧钱攻击**（denial of wallet）：攻击者不需要攻破任何系统，只要搞到一把能用的 API key——哪怕只是不小心传到公开代码仓库里的测试环境密钥——就能在短时间内打出大量请求，账单直接冲出预算。[^forcepoint]
+最直接的玩法是**烧钱攻击**（denial of wallet）：攻击者不需要攻破任何系统，只要大量发起请求，就能利用云端 AI 服务按量计费的模式，把成本推到难以承受的地步。[^owasp-2026] 设想一把测试环境的 API key 不小心被传进了公开代码仓库：谁拿到它，谁就能在短时间内打出大量请求，让账单直接冲出预算。
 
 更隐蔽的玩法专门盯上第三章讲过的**推理模型**。一项 2025 年的研究发现：只要在模型可能读到的内容里——一篇博客、一份代码文档——悄悄塞进一道看似无关的"诱饵"推理题，推理模型就会老老实实把它也想一遍。在几个公开数据集上，这能让模型多算 13 到 46 倍的思考 token，而呈现给用户的最终答案依然正确，不会露出任何破绽。[^overthink] 这正是 RAG 系统最容易中招的地方：诱饵题藏在会被检索回来的资料里，不需要攻破任何一个部件，光是被正常检索一次就够了。
 
-Agent 系统还有一种更朴素的版本。第四章提过，Agent 本身就可能自己停不下来，在几个工具之间反复横跳；这个弱点同样能被人故意当靶子打——比如让它爬到一篇被动了手脚的网页，里面链着几十篇"相关文章"，它就会一篇接一篇地跟下去，形成一棵不断扩展的“调用树”（也就是一串递归式的工具调用链），可能一小时都收不住。[^forcepoint]
+Agent 系统还有一种更朴素的版本。第四章提过，Agent 本身就可能自己停不下来，在几个工具之间反复横跳；这个弱点同样能被人故意利用。OWASP 就指出，攻击者可以发布恶意工具，诱导 Agent 陷入递归甚至无限循环的工具调用，或者去执行需要海量工具调用的任务，形成一棵不断扩展的“调用树”。[^owasp-2026]
 
 这类攻击难防的地方在于，它不像提示注入那样能从"模型有没有被骗"去堵——系统全程都在正常工作，没有一步出错，只是没有人告诉它什么时候该停。
 
@@ -582,7 +584,7 @@ Agent 系统还有一种更朴素的版本。第四章提过，Agent 本身就�
 
 **两个最值得记住的结论：**
 
-1. 这一章的风险分两类：一类是模型分不清"指令"和"资料"，被骗着去做坏事（提示注入、越狱）；另一类是系统没被骗，只是被人指使着把本职工作做个没完（资源消耗）。两类目前都没有办法从模型层面根治。
+1. 这一章的风险分两类：一类是模型分不清"指令"和"资料"，被骗着去做坏事（提示注入，包括越狱）；另一类是系统没被骗，只是被人指使着把本职工作做个没完（资源消耗）。两类目前都没有办法从模型层面根治。
 2. 决定后果大小的，不是系统有没有被骗、有没有被过度消耗，而是**它手里的权限有多大、预算有没有上限**——这也是为什么最小权限和硬性上限，是这两类风险共同的解法。
 
 [^ncsc]: UK National Cyber Security Centre, *Prompt injection is not SQL injection (it may be worse)*, 2025-12-08。原文：「Current large language models (LLMs) simply do not enforce a security boundary between instructions and data inside a prompt.」https://www.ncsc.gov.uk/sites/default/files/pdfs/blog/prompt-injection-is-not-sql-injection.pdf
@@ -595,15 +597,13 @@ Agent 系统还有一种更朴素的版本。第四章提过，Agent 本身就�
 
 [^postmark]: The Hacker News, *First Malicious MCP Server Found Stealing Emails in Rogue Postmark-MCP Package*, 2025-09-29（原始披露者 Koi Security 的博客链接已失效，故以此文为准）。https://thehackernews.com/2025/09/first-malicious-mcp-server-found.html
 
-[^owasp-2026]: OWASP GenAI Security Project, *OWASP GenAI LLM Top 10 2026*, 2026-08（前言；LLM01 提示注入；LLM03 过度授权；LLM06 资源无限消耗）。2026 版排名首次把真实事件数据纳入计算：分析 7,714 起已报告的 AI 安全事件，其中 6,639 起信息完整到可以归类，按专家共识 75%、事件数据 25% 的权重合并打分；原始文档未能直接读取全文，相关方法论与排名变动经 Cloud Security Alliance 的研究笔记交叉核实。https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/ ；Cloud Security Alliance, *OWASP's 2026 LLM Top 10: Incident Data Meets Judgment*。https://labs.cloudsecurityalliance.org/research/csa-research-note-owasp-llm-top10-2026-incident-weighted-202/
+[^owasp-2026]: OWASP GenAI Security Project, *OWASP GenAI LLM Top 10 2026*, 2026-08（前言；LLM01 提示注入；LLM03 过度授权；LLM06 资源无限消耗）。前言写明：从公开漏洞库和 AI 危害数据库中整理出 7,714 起真实事件，其中 6,639 起信息足够详细、可以归类；社区投票占四分之三权重，事件数据占四分之一；「Rank the categories by the raw incident record instead, and it falls out of the top 10 entirely. That gap is a defense effect.」LLM01 原文：「Jailbreaking is the subset of prompt injection where the attacker's goal is to make the model violate its safety protocols.」LLM06 原文描述了 Denial of Wallet，并指出攻击者可以发布工具，「forcing an LLM-based application into recursive or infinite tool-calling loops」。https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/ ；原文见 GitHub：https://github.com/GenAI-Security-Project/GenAI-LLM-Top10/tree/main/2026/final
 
 [^openai-atlas]: OpenAI, *Hardening Atlas against prompt injection*, 2025-12-22。原文：「Prompt injection, much like scams and social engineering on the web, is unlikely to ever be fully "solved".」https://openai.com/index/hardening-atlas-against-prompt-injection/
 
-[^rule-of-two]: Meta, *Agents Rule of Two: A Practical Approach to AI Agent Security*, 2025-08-31。https://ai.meta.com/blog/practical-ai-agent-security/
+[^rule-of-two]: Meta, *Agents Rule of Two: A Practical Approach to AI Agent Security*, 2025-10-31。https://ai.meta.com/blog/practical-ai-agent-security/
 
 [^nasr]: Nasr, Carlini, Tramèr et al., *The Attacker Moves Second: Stronger Adaptive Attacks Bypass Defenses Against LLM Jailbreaks and Prompt Injections*, 2025。https://arxiv.org/abs/2510.09023
-
-[^forcepoint]: Forcepoint X-Labs, *Unbounded Consumption: When AI Agents Never Learn to Stop Spending*, 2026。文中列举了两个典型的消耗型风险场景：一是测试环境 API Key 外泄导致短时间内请求暴增、账单超支；二是“深度研究”类 Agent 爬取到被恶意植入大量虚假链接的网页后，触发无休止的递归爬取，导致任务长时间失控。https://www.forcepoint.com/blog/x-labs/unbounded-consumption
 
 [^overthink]: Kumar, Roh, Naseh, Karpinska, Iyyer, Houmansadr & Bagdasarian, *OverThink: Slowdown Attacks on Reasoning LLMs*。向可能被检索到的内容里注入"诱饵"推理题，在 FreshQA 数据集上令推理 token 增加 13 倍，在 SQuAD 上增加 46 倍，最终答案保持正确。https://arxiv.org/abs/2502.02542
 
@@ -679,17 +679,17 @@ Agent 系统还有一种更朴素的版本。第四章提过，Agent 本身就�
 
 - **LangChain 系**：LangChain（基础框架）+ LangGraph（专做 Agent 编排）+ LangSmith（可观测性/调试），三者是同一生态里互相搭配的产品。
 - **Hugging Face 系**：模型库（全球最大的开源模型集散地）+ Transformers（方便加载各种模型的程序库）+ TGI（推理服务，已归档）+ 一整套开源工具。
-- **云厂商 MaaS**：AWS Bedrock、Microsoft Foundry（原 Azure AI Foundry，2026 年 1 月起更名[^foundry]）、Google Gemini Enterprise Agent Platform（2026 年 4 月由 Vertex AI 演进而来[^gemini-platform]）这类服务，把嵌入模型和生成模型都打包成托管好的云端服务，企业无需自建服务器即可调用。
+- **云厂商 MaaS**：AWS Bedrock、Microsoft Foundry（原 Azure AI Foundry，2025 年 11 月 Ignite 大会上更名[^foundry]）、Google Gemini Enterprise Agent Platform（2026 年 4 月由 Vertex AI 演进而来[^gemini-platform]）这类服务，把嵌入模型和生成模型都打包成托管好的云端服务，企业无需自建服务器即可调用。
 
 [^voyage]: MongoDB 新闻稿，2025-02-24：收购 Voyage AI。https://investors.mongodb.com/news-releases/news-release-details/mongodb-announces-acquisition-voyage-ai-enable-organizations
 
-[^jina]: Elastic 新闻稿，2025-10-09：完成对 Jina AI 的收购。https://www.elastic.co/blog/elastic-jina-ai
+[^jina]: Elastic 新闻稿（Business Wire），2025-10-09：*Elastic Completes Acquisition of Jina AI*。https://www.businesswire.com/news/home/20251009619654/en/Elastic-Completes-Acquisition-of-Jina-AI-a-Leader-in-Frontier-Models-for-Multimodal-and-Multilingual-Search
 
 [^autogen]: Microsoft, *autogen* 仓库 README：「AutoGen is now in maintenance mode... community managed going forward」，继任者为 Microsoft Agent Framework。https://github.com/microsoft/autogen ；Microsoft, *agent-framework* 仓库。https://github.com/microsoft/agent-framework
 
 [^tgi]: Hugging Face, *text-generation-inference* 仓库 README：「text-generation-inference is now in maintenance mode」；仓库已于 2026-03-21 归档。https://github.com/huggingface/text-generation-inference
 
-[^foundry]: Microsoft 2026 年 1 月产品条款更新：Azure AI Foundry 更名为 Microsoft Foundry。https://www.microsoft.com/licensing/terms/product/changes/all
+[^foundry]: Microsoft Learn, *What is Microsoft Foundry?*（"Evolution of Foundry" 一节列有新旧名称对照：Azure AI Studio / Azure AI Foundry → Microsoft Foundry）。更名于 2025-11-18 的 Microsoft Ignite 大会上公布。https://learn.microsoft.com/en-us/azure/foundry/what-is-foundry
 
 [^gemini-platform]: Google Cloud, *Introducing Gemini Enterprise Agent Platform*, 2026-04-22（Vertex AI 由此演进而来，原有功能并入新平台）。https://cloud.google.com/blog/products/ai-machine-learning/introducing-gemini-enterprise-agent-platform
 
@@ -706,6 +706,6 @@ Agent 系统还有一种更朴素的版本。第四章提过，Agent 本身就�
 - **合规**：机密内容被拼进 Prompt、送往云端的那一刻最敏感；日志是最容易被忽略的明文留存点。
 - **Agent**：Thought（想）→ Action（做）→ Observation（看结果）不断循环；模型是大脑，harness 是身体，harness 的质量与模型同等重要。
 - **代际之分**：循环规则写死在代码里的是经典 RAG，把"要不要再查、怎么查"交给模型临场判断的才是代理式。变的不是组件，是指挥权。
-- **安全**：风险分两类——模型分不清"指令"和"资料"被骗着干坏事（提示注入、越狱），或是没被骗、只是被指使着把本职工作做个没完（资源消耗/烧钱攻击）。两类都没法从模型层面根治，防御靠系统兜底：最小权限、硬性上限、高风险动作人工确认。
+- **安全**：风险分两类——模型分不清"指令"和"资料"被骗着干坏事（提示注入，包括越狱），或是没被骗、只是被指使着把本职工作做个没完（资源消耗/烧钱攻击）。两类都没法从模型层面根治，防御靠系统兜底：最小权限、硬性上限、高风险动作人工确认。
 - **推理模型**：先想后答。思考也是逐字 decode 出来的，占上下文、按输出计费，所以首字延迟更长、成本更高。
 - **全景**：RAG 只是 LLM 用法之一。缺知识补资料（量小用长上下文、量大用 RAG），缺自主性上 Agent，缺"想清楚"的时间用推理模型，缺能力或行为靠微调。选哪种，看任务缺的是什么。
