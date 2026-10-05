@@ -52,7 +52,8 @@ DESCRIPTIONS = {
         "ch3": "Four core mechanisms — embeddings, retrieval, serving, architecture",
         "ch4": "Agents — function calling, MCP, memory, and where they break",
         "ch5": "A compliance view — where confidential data actually goes",
-        "ch6": "Beyond RAG — the landscape, organized by what the model is missing",
+        "ch6": "A security view — prompt injection and other risks, from the attacker's side",
+        "ch7": "Beyond RAG — the landscape, organized by what the model is missing",
         "appendix": "Toolkit overview",
         "cheatsheet": "The whole guide on one page",
     },
@@ -63,7 +64,8 @@ DESCRIPTIONS = {
         "ch3": "四个核心机制——嵌入、检索、推理服务、系统架构",
         "ch4": "Agent——函数调用、MCP、记忆，以及它会在哪里出问题",
         "ch5": "合规视角——机密数据到底去了哪里",
-        "ch6": "RAG 之外——按「模型缺什么」组织的全景",
+        "ch6": "安全视角——提示注入与其他风险，换成攻击者的角度再看一遍",
+        "ch7": "RAG 之外——按「模型缺什么」组织的全景",
         "appendix": "工具库概览",
         "cheatsheet": "整本书浓缩在一页里",
     },
@@ -75,13 +77,13 @@ SHORT_LINKS = {
     "en": {
         "sidebar": "https://ymjr.de/llmbook-en-sidebar",
         "home": "https://ymjr.de/llmbook-en-home",
-        "ch6": "https://ymjr.de/llmbook-en-ch6",
+        "ch7": "https://ymjr.de/llmbook-en-ch7",
         "appendix": "https://ymjr.de/llmbook-en-appendix",
         "cheatsheet": "https://ymjr.de/llmbook-en-cheat",
     },
     "zh": {
         "sidebar": "https://ymjr.de/llmbook-zh-sidebar",
-        "ch6": "https://ymjr.de/llmbook-zh-ch6",
+        "ch7": "https://ymjr.de/llmbook-zh-ch7",
         "appendix": "https://ymjr.de/llmbook-zh-appendix",
         "cheatsheet": "https://ymjr.de/llmbook-zh-cheat",
     },
@@ -93,14 +95,14 @@ LANGS["en"]["sidenote_html"] = LANGS["en"]["sidenote_html"] % SHORT_LINKS["en"][
 # 章末区块首句：三页各不相同，其余段落一致
 ENDNOTE_LEAD = {
     "en": {
-        "ch6": ("That was the last chapter — the appendix and quick reference come after. "
+        "ch7": ("That was the last chapter — the appendix and quick reference come after. "
                 "The whole guide is here, free, and will stay that way."),
         "appendix": ("One page left after this: the quick reference card. "
                      "The whole guide is here, free, and will stay that way."),
         "cheatsheet": "You've reached the end. The whole guide is here, free, and will stay that way.",
     },
     "zh": {
-        "ch6": "正文到此结束，后面还有附录和速记卡片。网页版永久免费。",
+        "ch7": "正文到此结束，后面还有附录和速记卡片。网页版永久免费。",
         "appendix": "附录到此结束，后面还有一页速记卡片。网页版永久免费。",
         "cheatsheet": "全文到此结束，网页版永久免费。",
     },
@@ -115,7 +117,7 @@ def endnote_html(lang_key, sec_id):
             '<div class="endnote">\n'
             "  <p>%s</p>\n"
             "  <p>If you'd rather have it off the browser: 43 English pages / 30 Chinese pages, "
-            "typeset as PDF and EPUB, 7 original diagrams, 11 footnotes to primary sources — "
+            "typeset as PDF and EPUB, 7 original diagrams, 49 footnotes to primary sources — "
             "four files in one download, $9.</p>\n"
             '  <p><a href="%s">Get the PDF + EPUB on Gumroad →</a></p>\n'
             "</div>" % (lead, link)
@@ -124,7 +126,7 @@ def endnote_html(lang_key, sec_id):
         '<div class="endnote">\n'
         "  <p>%s</p>\n"
         "  <p>想把它从浏览器里拿出来：中文 30 页 / 英文 43 页，排版好的 PDF 与 EPUB、"
-        "7 张原创示意图、11 条一手来源脚注——四个文件一次下载，$9 起。"
+        "7 张原创示意图、49 条一手来源脚注——四个文件一次下载，$9 起。"
         "付款支持境外银行卡与 PayPal。</p>\n"
         '  <p><a href="%s">在 Gumroad 获取 PDF + EPUB →</a></p>\n'
         '  <p class="note-fine">在国内的话，可以在小红书上找到我（比白为竹间），'

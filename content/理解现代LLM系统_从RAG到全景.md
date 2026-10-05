@@ -13,7 +13,7 @@
 
 这套"先查资料、再让模型基于资料回答"的做法，行业里叫 **RAG（Retrieval-Augmented Generation，检索增强生成）**。它是目前最主流、也最适合入门理解的 LLM 应用方式，我们就以它为主线展开。
 
-这本书从 RAG 的流程入手，由表及里，再向外扩展到 Agent、合规，以及 RAG 在整个 LLM 应用版图中的位置。
+这本书从 RAG 的流程入手，由表及里，再向外扩展到 Agent、合规、安全，以及 RAG 在整个 LLM 应用版图中的位置。
 
 如果你是工作中绕不开 LLM、却不必亲手写代码的人——产品经理、项目经理、售前与解决方案工程师、创业者，或需要对接 AI 项目的管理者——需要的往往不是能跑的代码，而是能跟工程团队对话、评估方案、把事情跟客户讲清楚的那层理解，那么这本书正是为此而写：读完之后，应能看懂一套真实 LLM 系统的运转方式、跟上相关的技术讨论，并在面对具体需求时判断该选用 RAG 还是其他方案。
 
@@ -154,6 +154,8 @@ AI 客服上线之后，团队收到了三类不同的抱怨。
 >
 > **继续预训练则完全是另一个量级**：它消耗的是海量领域语料和大规模算力，通常需要专门的团队和基础设施。
 
+> **微调不只一种做法。** 上表里的 SFT，是给模型一批"问题＋标准答案"让它照着学。另一种做法叫**强化微调**（RFT，Reinforcement Fine-Tuning）：不给标准答案，只给一个"打分器"——一段能判断答案好坏的程序或规则。训练时，模型对同一个问题多次尝试作答，打分器逐个打分，得分高的作答方式就被强化下来。[^rft] 它适合"答案对不对可以客观判定、却很难写出唯一标准答案"的任务。这条路线也是推理模型背后的关键方法之一：DeepSeek-R1 的研究表明，只用这种按结果打分的强化学习、不提供人工写好的推理过程，模型也能自己练出反思、验证这类推理习惯。[^deepseek-r1] 
+
 **用错工具是常见的坑，其中最典型的一种是：想让模型掌握新知识，于是去做微调。** 研究已经反复验证，模型很难通过微调学到新的事实——引入新知识的训练样例，学得明显比其他样例慢；而等这些新知识终于被学会，模型编造内容的倾向反而会随之上升。[^gekhman]结论是：事实知识主要在预训练阶段获得，微调教会模型的是更高效地调用它已有的知识。所以，遇到模型答不上来的情况（本章开头的第一类抱怨），正确的解法是把资料查出来摆到它面前，而不是把资料固化进权重里。
 
 反过来也一样：RAG 不会改变模型的行为、语气和输出格式。模型啰嗦，RAG 治不了；格式不对，RAG 也修不好。第二类抱怨只能靠微调解决。
@@ -172,6 +174,10 @@ AI 客服上线之后，团队收到了三类不同的抱怨。
 
 [^gekhman]: Gekhman et al., *Does Fine-Tuning LLMs on New Knowledge Encourage Hallucinations?*, EMNLP 2024。https://arxiv.org/abs/2405.05904
 
+[^rft]: OpenAI, *Reinforcement fine-tuning*（官方文档）。https://developers.openai.com/api/docs/guides/reinforcement-fine-tuning
+
+[^deepseek-r1]: DeepSeek-AI, *DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learning*, Nature 645, 633–638 (2025)。https://arxiv.org/abs/2501.12948
+
 ---
 
 ## 第三章 · 深入专题：四个最核心的技术机制
@@ -186,14 +192,14 @@ AI 客服上线之后，团队收到了三类不同的抱怨。
 
 **具体技术流程（分两步）**：
 
-1. **分词（Tokenizer）**：先把文字切成模型能处理的小单位，叫"token"。要注意 token 不是"词"也不是"字"，而是**按出现频率划分的片段**：常用算法（BPE、SentencePiece）先把文字拆到最小单位，再反复把"最常一起出现的一对"合并，直到凑够一个词表（通常 5 万到 15 万个片段）。所以高频词可能整个是一个 token，生僻词则被拆成几个子词片段。
+1. **分词（Tokenizer）**：先把文字切成模型能处理的小单位，叫"token"。要注意 token 不是"词"也不是"字"，而是**按出现频率划分的片段**：常用算法（BPE、SentencePiece）先把文字拆到最小单位，再反复把"最常一起出现的一对"合并，直到凑够一个词表（如今主流模型多在 10 万到 26 万个片段之间：Llama 3 约 12.8 万、Qwen3 约 15.2 万、GPT-4o 约 20 万、Gemma 3 约 26.2 万[^vocab]）。所以高频词可能整个是一个 token，生僻词则被拆成几个子词片段。
 
    这样设计有个好处：再罕见、再新造的词，也总能拆成已知的子词甚至单个字节来表示，不会出现"这个词不认识、无法处理"的情况——这是早期分词方法的一个常见失败点。
 
-   还有一点对成本很实际：**同样一段话，不同语言占用的 token 数差别很大**。英文大约 4 个字符算一个 token，中文通常一到两个字就是一个 token。由于模型的收费和"一次能处理多长"都按 token 数算而非字数，同样篇幅的中文内容，占用的 token 往往比英文多。
+   还有一点对成本很实际：**同样一段话，不同语言、不同模型占用的 token 数可能差别很大**。模型的收费和"一次能处理多长"都按 token 数算而非字数，而早期的分词器对中文并不友好，同样的意思往往要多花不少 token。新一代分词器已经大幅改善：OpenAI 发布 GPT-4o 时公布，同一段示例文字，中文所需的 token 从 34 个降到 24 个，和英文持平。[^gpt4o-tok] 所以具体差多少，要看用的是哪个模型的分词器。
 2. **编码（Transformer 神经网络）**：把切好的token序列，喂进一个叫"transformer"的神经网络，它会给每个token算出一个向量，然后通过"池化"（把很多token的向量合并压缩成一个代表整句话的向量）和"归一化"（把向量的长度统一调整为1，方便后面用固定方法比较相似度），最终得到一个能代表整句话意思的向量。这个向量有多少个数字（即"维度"），2026年常见的范围是384到4096，通用场景一般从768或1024起步，再根据检索效果和存储成本调整。
 
-> **补充**：早期的嵌入模型多用 BERT 这类"编码器"结构，而目前效果最好的一批（如 NV-Embed、E5-mistral、GritLM）改为以大语言模型为起点，在其上加装池化层并做对比微调。两条路线产出的都是句子向量，用法完全一样，读者不必深究区别。
+> **补充**：嵌入模型的实现路线不止一种。除 BERT 一类编码器和大语言模型外，也有基于 **word2vec、GloVe** 等方法学习词向量，再通过平均或加权汇总得到句向量的传统路线；还有 **FastText** 这类利用子词信息的模型，以及专门为句子相似度训练的 **Siamese／双塔网络**（可采用 CNN、循环网络或 Transformer 等骨干）。这些路线这几年各领风骚，但对使用者而言结论是一样的：不管底层用哪种方法训练出来，拿到手的都是一个可以直接拿去算距离的句子向量，不需要关心它是怎么来的。
 
 **一个必须知道的限制：嵌入模型一次能读的文字有上限。** 每个嵌入模型都规定了单次输入的最长token数，超过的部分会被直接截掉，而且不会有任何报错提示——一段被切得过大的文本，后半截可能根本没有进入向量，检索时自然永远找不到。这正是第一章"离线索引"要先把长文档切块的硬性原因之一：切块的大小必须落在所用嵌入模型的长度上限之内。
 
@@ -207,21 +213,21 @@ AI 客服上线之后，团队收到了三类不同的抱怨。
 
 **先说底层能力：向量检索能做什么**
 
-3.1 讲过，意思相近的文字，向量会离得近。所以"检索"最基础的做法就是：把问题也转成向量，去库里找位置最接近的若干条。至于"接近"具体怎么算，工程上通常得到一个 0 到 1 之间的分数，越接近 1 表示意思越贴近——你在系统里看到的 "score 0.82" 就是这个分数。原理上它算的是两个向量的夹角，方向越一致分数越高，细节不必深究。
+3.1 讲过，意思相近的文字，向量会离得近。所以"检索"最基础的做法就是：把问题也转成向量，去库里找位置最接近的若干条。至于"接近"具体怎么算，工程上通常得到一个 0 到 1 之间的分数，越接近 1 表示意思越贴近——你在系统里看到的 "score 0.82" 就是这个分数。原理上它算的是两个向量的夹角，方向越一致分数越高。
 
-这个做法最大的好处是**不依赖字面**。用户问"怎么把老数据搬到新版本"，文档里写的是"历史记录迁移方案"，两句话没有一个词相同，向量检索照样能对上。这正是它相对传统关键词搜索的根本优势。
+这个做法最大的好处是**不依赖字面上的完全一致**。用户问"怎么把老数据搬到新版本"，文档里写的是"历史记录迁移方案"，两句话没有一个词相同，向量检索照样能对上。这正是它相对传统关键词搜索的根本优势。
 
 **第一层缺陷：数据量一大，逐条比对就慢得无法接受**
 
 如果库里有一千万条向量，每次提问都要跟全部比一遍再排序，实时问答根本扛不住。解决办法是 **ANN（近似最近邻）**：不追求百分之百找到最相似的那几条，而是靠预先建好的索引结构，只比对其中一小部分，用极小的精度损失换来几百倍的速度。
 
-这个"精度"有个标准的衡量方式，叫 **recall@k（前 k 条召回率）**：真正最相似的前 k 条里，实际被找回来了几条。它是一个可以调节的旋钮，而不是固定档位——而且越往高处代价越陡：从 0.8 调到 0.95，延迟大约增加三成，尚可接受；从 0.95 再往 0.99 推，延迟可能涨到三到五倍。多数生产系统会停在 0.95 附近。
+这个"精度"有个标准的衡量方式，叫 **recall@k（前 k 条召回率）**：真正最相似的前 k 条里，实际被找回来了几条。它是一个可以调节的旋钮，而不是固定档位——而且越往高处代价越陡：召回率越往接近 100% 推，需要多比对的候选就越多，延迟增长得比召回率本身快得多。所以多数生产系统不会去追求接近满分的召回率，而是在"找得准"和"跑得快"之间找一个够用就好的平衡点。
 
 具体的索引结构主要有三种，选哪个取决于数据规模：
 
-- **HNSW**（分层可导航小世界图）：把所有向量预先连成一张"邻居关系图"，查询时像玩"六度分隔"游戏，从一个起点出发，每次跳到离目标更近的邻居，几步就能逼近目标区域。**2026 年多数生产系统的默认选择**，召回率高、支持随时新增数据。它唯一的硬限制是整张图必须放进内存，因此单机实用上限大约在一到两亿条向量。
+- **HNSW**（分层可导航小世界图）：把所有向量预先连成一张"邻居关系图"，查询时像玩"六度分隔"游戏，从一个起点出发，每次跳到离目标更近的邻居，几步就能逼近目标区域。2026 年多数生产系统的默认选择，召回率高、支持随时新增数据。它唯一的硬限制是整张图必须放进内存，数据量一旦大到单机内存装不下，就得换别的方案。
 - **IVF**（倒排文件索引）：先用 k-means 把所有向量粗略分成若干个群，查询时只在最相关的几个群里细找。内存占用比 HNSW 小，但同等条件下召回率也更低，适合数据量大、内容基本不变、内存吃紧的场景。
-- **DiskANN**：把完整索引放在固态硬盘上，内存里只留压缩后的向量和导航结构。十亿级数据量下的标准答案——单节点可做到十亿条向量、95% 召回、5 毫秒延迟，内存占用比纯内存方案低约九成。
+- **DiskANN**：把完整索引放在固态硬盘上，内存里只留压缩后的向量和导航结构。十亿级数据量下的标准答案——论文里，在一台只有 64GB 内存的工作站上，对十亿条向量做到了 95% 以上的召回、平均延迟不到 3 毫秒；同样一台机器能承载的数据量，是 HNSW 这类纯内存图索引的 5 到 10 倍。[^diskann]
 
 这些方法的实现可见于 FAISS（一个开源的向量检索函数库）以及各类商用向量数据库。
 
@@ -236,6 +242,8 @@ AI 客服上线之后，团队收到了三类不同的抱怨。
 检索结果直接进 prompt 是危险的：不同用户能看的文档不同，客户不该看到内部版本的文档，外部合作伙伴不该看到内部定价明细。所以在切块入库时，每一块都要带上它来自哪份文档、那份文档谁能看（即 ACL 权限信息），检索时按提问者的身份实时过滤。同理还有时效性过滤——已作废的旧版本文档不该被翻出来当依据。
 
 这一步在工程上比听起来棘手：**先过滤再搜索**会破坏 ANN 索引的结构（那张邻居关系图是按全量数据建的，抽掉一部分点，路就断了）；**先搜索再过滤**则可能出现搜回来 50 条、过滤完只剩 2 条甚至一条不剩的情况。成熟的向量数据库为此提供了专门的过滤检索机制，但这仍是实际部署中最容易出性能问题的环节之一。
+
+这个顺序还有一层安全含义。OWASP 2026 版专门指出：如果相似度搜索先在全量数据上跑、权限过滤放到检索之后，攻击者即使一份别人的文档都看不到，也能从返回结果的数量、分数的分布、响应的快慢，推测出别人文档的存在和大致主题——在多个客户共用一个向量库的产品里，这就是跨客户泄露。所以它建议把权限范围直接写进检索查询本身，敏感场景干脆按客户分开建库。[^owasp-llm09] 性能和安全在这里指向同一个结论：权限过滤要做在检索里面，而不是检索之后。
 
 **第四层：粗筛出来的几十条，还要再精选**
 
@@ -267,7 +275,9 @@ AI 客服上线之后，团队收到了三类不同的抱怨。
 - **TTFT**（Time To First Token，首字延迟）：从发出请求到看到第一个字的时间，由 prefill 决定。
 - **TPOT / ITL**（每个输出 token 的间隔）：开始输出后，字与字之间的节奏，由 decode 决定。
 
-值得注意的是，**总等待时间通常由 decode 主导**。一个 500 字左右的回答，若每字间隔 80 毫秒，光 decode 就要花掉约 40 秒；相比之下首字延迟可能只有两百毫秒。所以"回答越长越慢"是线性累加的，感受非常直接。
+值得注意的是，**总等待时间通常由 decode 主导**。举例来说，假设每个字间隔 80 毫秒，一个 500 字左右的回答，光 decode 就要花掉约 40 秒；相比之下首字延迟可能只有两百毫秒。所以"回答越长越慢"是线性累加的，感受非常直接。
+
+**推理模型让 decode 的分量更重了。** 2024 年起出现的"推理模型"（reasoning model），在给出答案之前，会先生成一大段内部思考。这段思考也是逐个 token decode 出来的：通常不展示给用户，但同样占用上下文窗口，同样按输出 token 计费。[^reasoning] 对用户来说，体感就是首字延迟变长了——屏幕上出现第一个字之前，模型可能已经默默写了大量的思考。OpenAI 发布第一个推理模型 o1 时就指出，模型思考的时间越长，表现越好[^o1]，这等于用推理阶段的算力和等待时间去换答案质量。
 
 **服务器怎么同时应付很多人：连续批处理**
 
@@ -275,15 +285,15 @@ AI 客服上线之后，团队收到了三类不同的抱怨。
 
 现代推理框架（vLLM、SGLang 等）采用的做法叫**连续批处理（continuous batching）**：每一轮迭代，让当前所有活跃请求**各自前进一个 token**，然后进入下一轮；有请求结束就退出批次，有新请求进来就随时加入，不必等整批做完。这是把 GPU 喂饱的关键，也是它能同时服务几十上百个用户的原因。
 
-这个机制还解释了一个大家都遇到过的现象：**回答写到一半突然卡顿几百毫秒**。因为新请求的 prefill 挤进批次时，需要占用大量算力，正在逐字输出的请求只能等它算完——用户看到的就是文字流突然停住。
+早期的连续批处理还会带来一个现象：**回答写到一半突然卡顿**。新请求的 prefill 整段挤进批次时要占用大量算力，正在逐字输出的请求只能等它算完，用户看到的就是文字流突然停住。现在的主流框架已经专门处理了这个问题：vLLM 默认开启"分块预填充"（chunked prefill），把长的 prefill 切成小块，并优先安排正在输出的请求，官方说明这能改善字与字之间的间隔[^vllm-chunked]；更进一步的做法，是把 prefill 和 decode 拆到不同的机器上运行（预填充-解码分离）。
 
 **几条实用的成本规律**
 
-- **输入越长，prefill 成本上升得比想象中快**。注意力计算的复杂度是输入长度的平方级，所以参考资料从 2000 字加到 4000 字，这部分开销不是翻倍，而是接近四倍。这是"塞更多资料进 prompt"要付的隐性代价。
+- **输入很长时，prefill 成本上升得比想象中快。** 模型里只有"注意力"这一部分的计算量随输入长度呈平方级增长，其余部分都是线性的。据 Kaplan 等人的估算，只要输入长度不超过模型宽度（模型内部的一个尺寸参数）的 12 倍，与长度相关的那部分计算就只占总量的一小部分。[^kaplan] 对大模型来说，这个门槛在数万 token 以上：输入只有几千 token 时，资料翻倍，开销也大致翻倍；输入长到门槛以上，平方项开始主导，增长才会明显快于线性。这是"塞更多资料进 prompt"要付的隐性代价。
 - **答案越长，decode 时间线性增加**，且它通常主导用户的总等待时间。
 - **KV cache 很占显存**，并且随着上下文变长而增长——它是决定一台机器能同时服务多少人的主要限制。为此业界发展出了 **PagedAttention**[^pagedattention] 这类优化：像操作系统管理内存分页那样管理 KV cache，避免大块显存被闲置浪费，开源推理框架 vLLM 用的就是这个方法。
 
-**一个针对 prefill 的重要优化：提示缓存（prompt caching）。** RAG 系统的每次请求，开头往往是完全相同的——同一段系统指令，有时还有同一份长文档。既然内容一样，算出来的 KV cache 也一样，那就没必要每次重算。所以云端服务商普遍提供跨请求的前缀缓存：把这部分 KV cache 保留一段时间（通常几分钟到几小时），后续请求命中相同开头时直接复用，省下的正是 prefill 那笔平方级的开销。
+**一个针对 prefill 的重要优化：提示缓存（prompt caching）。** RAG 系统的每次请求，开头往往是完全相同的——同一段系统指令，有时还有同一份长文档。既然内容一样，算出来的 KV cache 也一样，那就没必要每次重算。所以云端服务商普遍提供跨请求的前缀缓存：把这部分 KV cache 保留一段时间（从几分钟到 24 小时不等，视服务商和设置而定）[^cache]，后续请求命中相同开头时直接复用，省下的正是 prefill 那笔平方级的开销。
 
 这个机制有一个容易被忽略的含义：KV cache 并不像通常以为的那样"算完即丢、只存在于当次请求"。开启缓存后，一部分内容会在服务商的基础设施里短暂驻留——第五章讨论合规时会再回到这一点。
 
@@ -316,11 +326,29 @@ AI 客服上线之后，团队收到了三类不同的抱怨。
 
 1. **各个下游部件彼此互不知道对方存在**。向量数据库不知道有模型服务，重排服务不知道有日志系统——是后端把前一个部件的产出，翻译成下一个部件看得懂的格式再递过去。部件越多这一点越明显：上面八步里后端要打交道的对象有六个，而它们相互之间的连线是零。
 
-2. **一切判断和把关只能发生在后端**。只有它看得到全貌，而且它处在公司自己能控制的范围内（模型服务很可能是别家公司的）。这就是为什么合规和安全审查逻辑必须放在这一层，第五章会详细展开。
+2. **一切判断和把关只能发生在后端**。只有它看得到全貌，而且它处在公司自己能控制的范围内（模型服务很可能是别家公司的）。这就是为什么合规和安全审查逻辑必须放在这一层，第五、六章会详细展开。
 
 3. **后端还负责所有的"出岔子怎么办"**。模型服务限流了要不要排队重试、检索超时了是降级回答还是直接报错、某一步失败后回退到哪里——这些判断只有后端做得了。真实系统里，处理异常的代码往往比处理正常流程的还多，这也是"负责人"和"传话筒"的区别所在。
 
 4. **代理式 RAG 并没有改变这张图**（第四章详细讲）。它只是让后端把第 2 到第 4 步多跑几轮，而且轮数由模型临场决定。分工结构、谁能跟谁说话，一点没变。
+
+[^vocab]: Meta, *Introducing Meta Llama 3*, 2024：「a tokenizer with a vocabulary of 128K tokens」。https://ai.meta.com/blog/meta-llama-3/ ；Qwen Team, *Qwen3 Technical Report*, 2025：「vocabulary size of 151,669」。https://arxiv.org/abs/2505.09388 ；OpenAI tiktoken 源码中的 o200k_base 编码（GPT-4o 使用），结束符编号为 199999。https://github.com/openai/tiktoken ；Gemma Team, *Gemma 3 Technical Report*, 2025：「262k entries」。https://arxiv.org/abs/2503.19786
+
+[^gpt4o-tok]: OpenAI, *Hello GPT-4o*, 2024-05（Language tokenization 一节）。https://openai.com/index/hello-gpt-4o/
+
+[^diskann]: Subramanya et al., *DiskANN: Fast Accurate Billion-point Nearest Neighbor Search on a Single Node*, NeurIPS 2019。https://www.microsoft.com/en-us/research/publication/diskann-fast-accurate-billion-point-nearest-neighbor-search-on-a-single-node/
+
+[^owasp-llm09]: OWASP GenAI Security Project, *OWASP Top 10 for LLM Applications 2026*, LLM09:2026 Vector and Embedding Weaknesses。https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/（原文见 GenAI Security Project 的 GenAI-LLM-Top10 仓库，2026/final 目录）
+
+[^reasoning]: OpenAI, *Reasoning models*（官方文档）：「While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.」https://developers.openai.com/api/docs/guides/reasoning
+
+[^o1]: OpenAI, *Learning to reason with LLMs*, 2024-09：「performance of o1 consistently improves with more reinforcement learning (train-time compute) and with more time spent thinking (test-time compute).」https://openai.com/index/learning-to-reason-with-llms/
+
+[^vllm-chunked]: vLLM 官方文档 *Optimization and Tuning*：「In V1, chunked prefill is enabled by default whenever possible… It improves inter-token latency (ITL)…」https://docs.vllm.ai/en/stable/configuration/optimization/
+
+[^kaplan]: Kaplan et al., *Scaling Laws for Neural Language Models*, 2020, Section 2.1：「For contexts and models with d_model > n_ctx/12, the context-dependent computational cost per token is a relatively small fraction of the total compute.」https://arxiv.org/abs/2001.08361
+
+[^cache]: OpenAI, *Prompt caching*。https://developers.openai.com/api/docs/guides/prompt-caching ；Anthropic, *Prompt caching*。https://platform.claude.com/docs/en/build-with-claude/prompt-caching
 
 [^pagedattention]: Kwon et al., *Efficient Memory Management for Large Language Model Serving with PagedAttention*, SOSP 2023（vLLM 的核心论文）。https://arxiv.org/abs/2309.06180
 
@@ -348,6 +376,8 @@ Agent 最基础也最常用的模式叫 **ReAct**[^react]，名字取自论文�
 
 注意前两步是模型产出的，第三步是外部送进来的。后来的资料常把这三步写作 Reason / Act / Observe，以与 ReAct 这个名字对齐，指的是同一回事。
 
+需要说明的是，原始论文里的 Thought 是模型以文字形式写出来的。现在的推理模型已经把这一步内化了：它们能在两次工具调用之间先"想一想"，再决定下一步，这个思考由模型原生完成，不需要开发者再用提示词模板引导它写出 Thought。[^interleaved] 所以今天的 ReAct，更多是一个理解 Agent 怎么运作的模型，而不是必须照搬的写法。
+
 三步反复循环，直到模型判断任务完成。
 
 ReAct 是默认起点，但不是唯一模式。任务复杂到单个循环跟不住时，可以让模型先把整件事拆成计划再逐条执行；同类错误反复出现时，可以加一层让它回顾失败原因的机制。业界的经验是：**先用 ReAct 建立基线，测出成功率、工具调用准确率、延迟和成本，确认单个 Agent 确实解决不了问题，再往上升级**——过早堆复杂度是常见且昂贵的错误。
@@ -362,7 +392,7 @@ ReAct 是默认起点，但不是唯一模式。任务复杂到单个循环跟�
 
 用 3.4 的话说，**harness 就是那个"唯一主动发起动作"的后端**。Agent 并没有改变那张通信图，只是让后端把其中几步反复跑。
 
-这个词借自软件测试（test harness 指在受控条件下运行代码的脚手架）。它之所以值得有个单独的名字，是因为**harness 的质量和模型的质量同等重要**：同一个模型换一套 harness，任务成功率可能相差一倍以上；相当比例的企业 Agent 项目失败，根源在 harness 设计而不在模型能力。Anthropic 有一句话概括得很好——harness 里的每个组件，都编码着一个关于"模型自己做不到什么"的假设；模型在某件事上变强之后，对应的组件就该拆掉。
+这个词借自软件测试（test harness 指在受控条件下运行代码的脚手架）。它之所以值得有个单独的名字，是因为**harness 的质量和模型的质量同等重要**：同一个模型换一套 harness，表现可能差出一大截，现实中不少企业 Agent 项目的瓶颈，出在 harness 设计上，而不是模型本身的能力。harness 里的每个组件，都编码着一个关于"模型自己做不到什么"的假设；这些假设值得反复检验，因为它们可能本来就不对，而且模型一变强，就会很快过时。[^harness]
 
 **Function Calling（工具调用）**
 
@@ -372,17 +402,17 @@ ReAct 是默认起点，但不是唯一模式。任务复杂到单个循环跟�
 
 **MCP（Model Context Protocol，模型上下文协议）**
 
-一个开放标准，规定了工具和数据源该用什么接口与 Agent 对接。在它出现之前，每接一个工具都要写一段专门的适配代码；有了统一标准，就像从"每种电器配专属插头"变成了 USB 接口。
+MCP 是一个开放标准，规定了工具和数据源该用什么接口与 Agent 对接。它最早由 Anthropic 发布，2025 年 12 月起交给 Linux 基金会下的 Agentic AI Foundation 管理。[^aaif] 在它出现之前，每接一个工具都要写一段专门的适配代码；有了统一标准，就像从"每种电器配专属插头"变成了 USB 接口。
 
-两个代价值得知道。其一是**上下文成本**：MCP 的工具说明是常驻上下文的，接的服务器一多，对话还没开始就已占掉相当一部分上下文窗口（目前业界用"按需加载工具"来缓解）。其二是**安全**：MCP 规范本身不含认证与授权机制，2026 年上半年已出现数十份相关漏洞报告，接入第三方 MCP 服务器前需要审查。
+不过，使用 MCP 有两个不可忽视的代价。首先是高昂的上下文成本。由于 MCP 的工具说明需要一直保留在上下文中，一旦接入的服务器过多，对话都还没开始，上下文窗口就会被占去一大半（目前业界通常用“按需加载”来缓解这个问题）。其次是安全隐患。MCP 让 Agent 能够随意连接第三方工具，但这也会把工具本身的漏洞一并带进来，关于这方面的风险，我们将在第六章专门探讨。
 
 **Skill（技能）**
 
-一份打包好的工作流说明：把某类任务该怎么做——用什么措辞、按什么步骤、什么算完成——写成文档，需要时让 Agent 照着做。形式上就是一个文件夹，里面放一份说明文件，可以附带模板和参考资料。
+一份打包好的工作流说明：把某类任务该怎么做——用什么措辞、按什么步骤、什么算完成——写成文档，需要时让 Agent 照着做。形式上就是一个文件夹，里面放一份说明文件，可以附带模板和参考资料。这套格式最早由 Anthropic 提出，2025 年 12 月作为开放标准发布，已被多家 Agent 产品采用。[^skills]
 
-关键设计叫**渐进式披露**：平时只加载技能的名字和一句话描述，只有当任务匹配上，才把完整内容读进上下文。所以装几十个技能也不会撑爆上下文窗口。
+Skill中的关键设计叫**渐进式披露**：平时只加载技能的名字和一句话描述，只有当任务匹配上，才把完整内容读进上下文。所以装几十个技能也不会撑爆上下文窗口。
 
-**Skill 和 MCP 常被搞混，其实是互补关系**：MCP 解决"能接触到什么"，负责把 Agent 接上外部系统；Skill 解决"该怎么做"，教它一套办事的规矩。Skill 本身不连接任何东西，也不执行任何调用，它就是一份写好的说明。多数生产级 Agent 两个都需要。
+很多人容易把 Skill 和 MCP 搞混，但它们其实是互补的关系。简单来说，MCP 解决的是**能调用哪些外部资源**，负责把 Agent 和各种外部数据库、工具接口连通；而 Skill 解决的是**拿到资源后该怎么做**，专门教它一套办事的规矩。Skill 本身不建立任何连接，也不执行具体操作，它本质上就是一份写好的行动指南。正因如此，绝大多数生产级别的 Agent 都需要把两者搭配起来使用。
 
 ### 记忆
 
@@ -393,7 +423,7 @@ ReAct 是默认起点，但不是唯一模式。任务复杂到单个循环跟�
 - **短期记忆**：当前上下文窗口里的内容，也就是这轮任务到目前为止的全部过程。它有硬性容量上限，harness 需要不断决定保留什么、压缩什么、丢弃什么。
 - **长期记忆**：上下文之外的一个外部存储，把过去的经历、结论、用户偏好存下来，需要时再检索回来。**它的实现方式其实就是 RAG**——只不过检索的对象不是公司文档，而是 Agent 自己的历史。
 
-记忆在 2024 年前后还只是"上下文窗口"的代名词，如今已被视为与推理、编排、工具并列的核心架构层，而不是可选项。
+记忆在 2024 年前后，大多还只是"上下文窗口"的代名词；现在的 Agent 系统设计里，它更多被当作与推理、编排、工具并列的一层来对待，而不是事后才补的细节。
 
 ### Agentic RAG：把检索的决定权交给模型
 
@@ -409,17 +439,29 @@ ReAct 是默认起点，但不是唯一模式。任务复杂到单个循环跟�
 
 **上下文会滚雪球。** 每一轮循环，harness 都要把之前所有的思考、工具调用和返回结果重新发给模型，输入越滚越长；3.3 讲过 prefill 的开销随输入长度呈平方级增长，因此这部分成本涨得比轮数快得多。
 
-不过这正是提示缓存最擅长的场景——Agent 每一轮的上下文都是在上一轮末尾追加内容，开头那一大段逐字相同，可以直接复用已经算好的结果，主流服务商对命中缓存的部分只收约一成费用。由此产生一条与直觉相反的设计规则：**把稳定的内容（系统指令、工具说明、参考资料）原样固定在开头，变化的部分一律追加到末尾**。缓存要求前缀完全一致，工具顺序一变、中间插入一个时间戳，缓存就落空了。它也不是万能的：便宜的只是输入部分，而每轮生成的思考和工具调用属于输出，仍按原价计费；缓存本身还有有效期，harness 中途压缩上下文同样会让前缀失效。
+这正是提示缓存最适用的场景。因为 Agent 每一轮通常只在对话末尾追加新内容，前面大量的背景信息保持不变，系统就可以复用已经算好的结果。为了提高缓存命中率，应把系统指令、参考资料等固定内容统一放在最开头，把变化的内容全部放在末尾。缓存通常按固定的前缀匹配；中间哪怕只是调整了工具的顺序或插入一个时间戳，也会改变后续前缀，使这部分缓存失效。
+
+提示缓存能大幅降低使用成本。虽然首次写入缓存时，部分服务商可能会加收 25% 到 100% 的费用，但之后命中缓存的部分，输入费用通常会降到原价的一成甚至更低[^cache]。不过需要注意的是，缓存只针对命中的输入部分降价，Agent 每轮生成的思考过程和工具调用依然按输出原价计费。此外，缓存本身有有效期；如果系统在中途自动压缩上下文记录，也可能改变前缀，导致后续缓存失效。
 
 **可能停不下来。** 模型判断"任务已完成"的能力并不可靠，它可能在两个工具之间反复横跳，也可能陷入死循环。所以 harness 必须设硬性上限：最多跑几轮、最多花多少钱、超时如何处理。
 
 **工具失败会连锁。** 某个工具返回了错误或异常数据，模型可能据此继续推理，越走越偏。生产系统需要在执行前校验输入、对瞬时故障重试，并把失败明确告诉模型，而不是静默跳过。
 
-**高风险动作要有人批准。** Agent 与问答系统最本质的区别是它**会真的动手**——发邮件、改数据、下订单。因此涉及不可撤销后果的动作，通行做法是设置人工审批关卡并保留完整的操作审计记录。这应当在架构设计阶段就作为一等组件考虑，而不是出事后再补。第五章会从合规角度再谈。
+**高风险动作要有人批准。** Agent 与问答系统最本质的区别是它**会真的动手**——发邮件、改数据、下订单。因此涉及不可撤销后果的动作，通行做法是设置人工审批关卡并保留完整的操作审计记录。这应当在架构设计阶段就作为一等组件考虑，而不是出事后再补。第五、六章会分别从合规和安全的角度再谈。
 
 **Agent 放大了提示注入的危害。** 问答系统被注入，最坏结果是给出一个错误答案；Agent 被注入，则可能真的执行了攻击者想要的操作。第六章会详细讲这个风险。
 
 [^react]: Yao et al., *ReAct: Synergizing Reasoning and Acting in Language Models*, ICLR 2023。https://arxiv.org/abs/2210.03629
+
+[^interleaved]: Anthropic, *Extended thinking*（Interleaved thinking 一节）：「Interleaved thinking lets Claude think between tool calls within a single assistant turn…」https://platform.claude.com/docs/en/build-with-claude/extended-thinking
+
+[^harness]: Prithvi Rajasekaran, *Harness design for long-running application development*, Anthropic Engineering, 2026-03-24。https://www.anthropic.com/engineering/harness-design-long-running-apps
+
+[^aaif]: Model Context Protocol Blog, *MCP joins the Agentic AI Foundation*, 2025-12-09。https://blog.modelcontextprotocol.io/posts/2025-12-09-mcp-joins-agentic-ai-foundation/
+
+[^skills]: Agent Skills 官方仓库 README：「The Agent Skills format was originally developed by Anthropic, released as an open standard…」（仓库建于 2025-12-16）。https://github.com/agentskills/agentskills
+
+[^cache]: Anthropic, *Prompt caching*：命中价为基准输入价的 0.1 倍（部分新模型低至 0.05、0.025 倍），写入价为 1.25 倍（5 分钟缓存）或 2 倍（1 小时缓存）。https://platform.claude.com/docs/en/build-with-claude/prompt-caching ；OpenAI, *Prompt caching*：命中价为 0.1 倍，GPT-5.6 起写入价为 1.25 倍。https://developers.openai.com/api/docs/guides/prompt-caching
 
 ## 第五章 · 合规视角：机密数据到底会流到哪里去
 
@@ -429,20 +471,20 @@ RAG 的合规之所以比传统数据库更棘手，在于它天然缺乏审计�
 
 | 数据状态 | 会出现在哪里 | 主要风险 | 怎么防范 |
 |---|---|---|---|
-| **① 静态（At Rest，数据存着没动）** | 向量库里的向量和原文块、微调后的模型权重、日志、备份 | 原文常以明文散落在多处；**向量已被证明可反推回原文**——拿到向量库读取权限的攻击者，用现成工具即可还原出敏感内容，"存成向量"不等于"脱敏"；权重会记住训练数据，且难以定点删除 | 静态加密 + 客户自持密钥、严格权限管控、确保数据可被彻底删除 |
+| **① 静态（At Rest，数据存着没动）** | 向量库里的向量和原文块、微调后的模型权重、日志、备份 | 原文常以明文散落在多处；**向量已被证明可以反推回原文**：短文本片段的还原率很高，新一代方法甚至不需要事先针对具体的嵌入模型做训练；OWASP 明确建议，只泄露了向量，也要按原文泄露处理——"存成向量"不等于"脱敏"[^vec2text][^owasp-llm09]；权重会记住训练数据，且难以定点删除 | 静态加密 + 客户自持密钥、严格权限管控、确保数据可被彻底删除 |
 | **② 传输（In Transit，数据在网络上流动）** | 系统内的每一次传送。RAG 天然分布式，一次提问就会触发多段内部传输（查询发往向量库、取回文档块、文档块转发给模型）；其中最关键的是**完整 Prompt 送往云端模型**这一步 | TLS（网址栏的小锁）只防中途被第三方窃听，**不对接收方保密**；用公开云端模型，等于机密原文真正离开了公司边界，交由另一家公司处理 | 自托管或使用符合数据主权要求的推理服务；送出前脱敏；明确划定哪些数据绝不可离开边界 |
 | **③ 使用与日志（In Use + Logs，数据正被处理或被记录）** | 推理时暂存的 KV cache；日志平台记录的完整 prompt 与回应 | **最易被忽略、风险却很大**：日志是机密内容的持久明文副本；合同若允许，还可能被用于训练或长期留存 | 入日志前先脱敏；设定保留期上限（如 30 天）；在合同中明确约定用途限制 |
 | **④ 落地与权限（Residency + Access，数据存在哪、谁能看）** | 各存储与推理环节的物理所在地（哪个国家、哪个司法管辖区）；RAG 检索时对原文档的访问控制 | 跨境传输可能违反当地法规；**越权检索**——文档被转成向量入库的那一刻，原本的访问权限就被剥离了，若不额外补回，系统会把用户无权查看的内容也检索进答案 | 确保存放地合规；切块入库时给每一块绑定原文档的权限清单（ACL），检索时按提问者身份实时过滤 |
 
 表里有三处值得单独点破，因为它们最反直觉，也最容易埋雷：
 
-**"删除"往往只是假象。** 向量数据库出于性能考虑，默认把删除做成元数据层面的"软删除"——把 API 返回无错误当成删除成功，数据其实可能仍物理存在，被软删除的向量甚至可以重建。这与"权重难以定点删除"是同一个痛点在不同存储层的体现，而 GDPR 第 17 条要求的是真正、完整的删除。
+**"删除"往往只是假象。** 向量数据库出于性能考虑，默认把删除做成元数据层面的"软删除"——把 API 返回无错误当成删除成功，数据其实可能仍物理存在。这与"权重难以定点删除"是同一个痛点在不同存储层的体现，而 GDPR 第 17 条要求的是真正、完整的删除。
 
 **脱敏不是一涂了之。** 简单涂黑会破坏语义：把姓名或账号直接抹掉，模型也就失去了生成有用回答所需的信息——比如"客户 ___ 的账号 ___ 被重复扣款两次"，姓名和账号一抹掉，模型连"谁的、哪个账号"这个基本结构都读不出来，自然答不好。正确做法是用保留上下文的令牌化替代粗暴删除：把"张三"换成 `[姓名_1]`、把具体卡号换成 `[账号_1]` 这样的占位符，句子变成"客户 [姓名_1] 的账号 [账号_1] 被重复扣款两次"——具体是谁、哪个账号，模型看不到（遮住了敏感值），但"这里有一个姓名""这里有一个账号"这个角色信息保留了下来，模型依然能顺着完整的句子结构组织出有用的回答，而不是对着几个空格发呆。
 
 **权限默认会丢失。** 来自 Confluence、SharePoint、内部 wiki 的文档，一旦转成向量，原有的访问控制就不再随附。这正是"绑定 ACL"必须作为一个额外动作去做的原因——它不会自动继承。
 
-这些并非危言耸听。OWASP 在 2025 版清单里将「向量与嵌入弱点」列为新增的独立类别[^owasp]，并把提示注入列为 LLM 应用的头号风险，而 RAG 恰恰是暴露面最大的架构。
+这些并非危言耸听。下一章会换到攻击者的角度，把这些风险再看一遍。
 
 **两个最值得记住的结论**：
 
@@ -456,15 +498,120 @@ MaaS（Model-as-a-Service，模型即服务）指通过网络调用的云端模�
 - **权重是只读的**：提问的内容不会被写进模型参数、改变模型本身。"模型自己带存储"是常见误解——除非供应商特意拿对话去做后续训练，那是另一回事。
 - **提示缓存是易被忽略的短期落点**：若供应商开启跨请求的提示缓存（见 3.3），请求开头的部分内容会以 KV cache 形式在其基础设施中短暂驻留。这不等于用于训练或长期留存，但严格说，推理并非完全无状态。
 - **真正会长期保留的**是日志（完整问答明文）、滥用检测记录、以及（合同允许时）用于训练的数据——是否保留、留多久，取决于合同条款与技术设置。
-- **ZDR（Zero Data Retention，零数据保留）**：一种合同条款，签署后可关闭上述持久化留存。但需确认它是否涵盖提示缓存这类基础设施层的短期驻留，以免留下缺口。
+- **ZDR（Zero Data Retention，零数据保留）**：一种合同条款，签署后可关闭上述持久化留存。但需确认它是否涵盖提示缓存这类基础设施层的短期驻留，以免留下缺口。OpenAI 的文档就写明：至少对一部分模型而言，启用 ZDR 的组织默认只把缓存放在内存里，不启用 24 小时的扩展保留。[^cache]
 
-[^owasp]: OWASP GenAI Security Project, *OWASP Top 10 for LLM Applications 2025*——LLM08:2025 Vector and Embedding Weaknesses，相对 2023 版新增的独立类别。清单本身发布于 2024 年 11 月。https://genai.owasp.org/llm-top-10/
+以 OpenAI 为例：它的 API 自 2023 年 3 月起默认不拿客户数据训练模型，但所有 API 调用都会生成"滥用监控日志"，其中可能包含提示词和回复，最长保留 30 天；要排除这部分，需要申请零数据留存，并经 OpenAI 事先批准。[^openai-data] 所以，**"不拿你的数据训练"和"不留存你的数据"是两个独立的问题**，评估供应商时要分开问。
 
-## 第六章 · 跳出 RAG：LLM 系统的全景
+[^vec2text]: Morris et al., *Text Embeddings Reveal (Almost) As Much As Text*, EMNLP 2023。在 GTR 模型上，32 token 文本精确还原 92%；在 OpenAI text-embedding-ada-002 上，32 token 为 60.9%，128 token 降到 8.0%；临床记录片段中 89% 的患者全名可被还原。https://arxiv.org/abs/2310.06816
 
-前面五章把 RAG 讲透了，但需要提醒一句：**RAG 只是 LLM 众多用法中的一种**，专门解决"知识"这一类问题。真实世界里，把 LLM 用起来的方式还有好几种，各自对应不同的需求。本章梳理这几种形态，说明 RAG 在其中所处的位置及其适用边界。
+[^owasp-llm09]: OWASP GenAI Security Project, *OWASP Top 10 for LLM Applications 2026*, LLM09:2026 Vector and Embedding Weaknesses。https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/（原文见 GenAI Security Project 的 GenAI-LLM-Top10 仓库，2026/final 目录）
 
-区分这几种形态，可以从一个具体场景入手：当你拿到一个任务、准备交给模型时，先问一句——**要完成它，模型缺的是什么？** 是缺知识，还是缺自主判断，还是缺某种能力？顺着这个问题往下分，下面五种形态各自对应一种情形。
+[^cache]: OpenAI, *Prompt caching*。https://developers.openai.com/api/docs/guides/prompt-caching
+
+[^openai-data]: OpenAI, *Data controls in the OpenAI platform*（官方文档）。https://developers.openai.com/api/docs/guides/your-data
+
+## 第六章 · 安全视角：当有人故意使坏
+
+第五章问的是：数据在系统里正常流动时，会流向哪里、留下什么痕迹。这一章换一个问题：**如果有人存心捣乱，会发生什么？**
+
+### 安全和合规，顾虑的不是一回事
+
+这两个词常被放在一起说，但出发点不同：
+
+| | 合规 | 安全 |
+|---|---|---|
+| 担心什么 | 系统正常运行时，数据被不当留存、越权读取、跨境传输 | 有人主动攻击，让系统做出不该做的事 |
+| 典型问题 | "日志里是不是存着明文？""供应商会不会拿数据去训练？" | "资料里被人藏了一句指令，模型会照做吗？" |
+| 主要对手 | 自己的疏忽、不够清楚的合同条款 | 外部的攻击者 |
+
+两者有交集：越权检索（第五章提过）既是合规问题，也能被攻击者直接利用。但思路不一样——合规是把数据的流向梳理清楚，安全是假设总有人在找漏洞，然后想办法让漏洞捅不出大娄子。
+
+### 常见的风险，和两个例外
+
+按风险主要影响系统的哪个部分来梳理，会更容易看清它们的表现。**模型层**最常见的威胁是直接提示注入和越狱。这两者看起来都像“模型不听话”，但根源不一样：提示注入是攻击者把“命令”伪装成“资料”放进系统会读取的内容里，让模型误以为这些话是正常信息，而不是需要执行的要求；越狱则是在正常对话中，用户自己使用绕过式表达、反转语义或编故事的方法，试图说服模型违背它训练时被要求遵守的规则。简单说，前者是“把命令藏进数据里”，后者是“让模型自己违背规则”。
+
+**工具层**的风险主要源于“外部依赖被污染”，比如工具把用户的输入当成了系统命令去执行（也就是命令注入），或者是接入了恶意的服务器。以 MCP 为例，因为规范允许将身份验证设为可选，系统安不安全全靠服务器开发者来定[^mcp-auth]。这就给黑客留下了可乘之机。2025 年 9 月，安全公司 Koi Security 就曝光了一个 npm 上的恶意案例：有人伪装成 Postmark 邮件服务商发布了一个 MCP 包，从 1.0.16 版本开始，它会把用户发出的每一封邮件都偷偷复制一份发给黑客[^postmark]。这类攻击之所以能得手，根本原因在于系统把第三方工具当成了绝对可信的“自己人”。因此，接入任何第三方 MCP 服务器时，绝不能假定它天生无害，必须像对待其他第三方软件一样，对其进行严格的安全审查。
+
+**Agent 层**最典型的风险是过度授权，也就是赋予了它超出实际任务所需的权限。这种风险往往很隐蔽，表面上看只是让 Agent 显得“更全能”，但只要它手里握着不必要的读写、联网或删除权限，攻击者只需稍加诱导就能引发大乱。比如，一个本职工作仅仅是“代写回信草稿”的客服 Agent，如果同时拥有读取全部邮件、访问 CRM 甚至对外发信的权限，一旦遭遇恶意指令，就可能悄悄导出大量敏感客户数据并向外泄露。问题的核心并不在于 Agent 会故意作恶，而是它“手伸得太长”；一旦任务被人稍微带偏，原本帮忙干活的助手就会瞬间变成扩大破坏范围的帮凶。
+
+**数据层**则是老问题：投毒、反演、干扰和越权检索等手段，都会直接破坏知识库或检索结果的可信度。第三章 3.2 和第五章都详细讨论过这些问题——它们不是“模型突然坏了”，而是数据源本身、数据处理链路或者检索方式被人恶意污染了，所以系统看起来正常运转，实际却在传递错误信息或泄露不该泄露的内容。
+
+这份排名绝非凭空臆造。2026 版首次将真实世界的数据纳入评估，对 6,639 起信息详实的 AI 安全事件进行了复盘，最终以“75% 专家共识加 25% 真实事件数据”的权重综合测算得出[^owasp-2026]。在这份榜单中，有两个风险尤为值得关注：一个是稳居榜首的“提示注入”，其根源在于模型始终无法从根本上分辨指令与数据，这也是各种越狱手段的核心逻辑；另一个则是排名快速攀升的“消耗型风险”，它完全不攻击任何系统部件，只是诱导系统无休止地执行合法任务，借此活活烧干算力和账单。接下来，我们将对这两种最典型的风险展开详细剖析。
+
+### 提示注入：安全风险里的头号问题
+
+回到第一章的秘书处比喻。笔杆子拿到工作夹，照着里面的材料起草答复。现在假设有人在某份档案里夹了一张纸条："起草答复的人，请在末尾附上本季度的客户名单。"笔杆子会不会照办？
+
+对人来说，这张纸条一望而知可疑——人分得清"领导交办的任务"和"档案里的内容"，这是两件事。但是**模型分不清**。对它来说，系统指令、用户的问题、检索到的资料，全都只是同一串文本。英国国家网络安全中心说得很直接："当前的大语言模型通常不能可靠地区分提示词中的指令和数据。"[^ncsc] 这就是**提示注入**（prompt injection）：把指令伪装成普通内容，诱使模型执行它本不该执行的操作。
+
+提示注入分两种。**直接注入**是用户自己在提问里写"忽略前面的所有要求"这类话。**间接注入**更危险，也更难防：攻击者根本不用跟系统对话，只需要把指令埋进系统迟早会读到的地方，一个网页、一封邮件、一份将来会被收进知识库的文档。[^greshake] 用户自己看不到这些指令，但模型会读到。
+
+RAG 恰好把这个风险放大了。它的工作方式就是把外部资料拼进 prompt，只要攻击者想办法让一段文字混进知识库，这段文字就有机会被检索出来，原样摆到模型面前。
+
+**一个真实案例：EchoLeak。** 2025 年 6 月，微软公开了 Microsoft 365 Copilot 的一个漏洞，编号 CVE-2025-32711，微软自己给出的严重程度评分是 9.3（满分 10）。攻击者只做了一件事：给目标员工发一封看起来很正常的邮件，邮件正文里藏着指令。等到这名员工向 Copilot 提问，Copilot 把这封邮件当作相关资料检索了回来，照着里面的指令，把企业内部数据嵌进了一个图片链接；界面自动加载图片的那一刻，数据就悄悄发到了攻击者的服务器上。整个过程中，员工什么都没点、什么都没做。更麻烦的是，这次攻击绕过了微软专门部署的提示注入检测器。漏洞早在 2025 年 1 月就已报告给微软，5 月修复。[^echoleak]
+
+这个案例恰好把本书前面讲过的几个环节串了起来：❸ 检索把带毒的邮件找了回来，❹ 组装把它和机密资料塞进了同一个工作夹，❼ 呈现环节里自动加载的图片，成了数据外泄的出口。
+
+### 另一种攻击：不碰任何部件，烧的是你的账单
+
+提示注入的问题出在"分不清指令和资料"；这一类风险完全不同——攻击者什么都没骗到，只是让系统老老实实干它本来就会干的事，干得没完没了。OWASP 把它叫**资源无限消耗**（Unbounded Consumption），2026 版排名里从第十位冲到第六位，涨得比任何其他类别都快。[^owasp-2026]
+
+最直接的玩法是**烧钱攻击**（denial of wallet）：攻击者不需要攻破任何系统，只要搞到一把能用的 API key——哪怕只是不小心传到公开代码仓库里的测试环境密钥——就能在短时间内打出大量请求，账单直接冲出预算。[^forcepoint]
+
+更隐蔽的玩法专门盯上第三章讲过的**推理模型**。一项 2025 年的研究发现：只要在模型可能读到的内容里——一篇博客、一份代码文档——悄悄塞进一道看似无关的"诱饵"推理题，推理模型就会老老实实把它也想一遍。在几个公开数据集上，这能让模型多算 13 到 46 倍的思考 token，而呈现给用户的最终答案依然正确，不会露出任何破绽。[^overthink] 这正是 RAG 系统最容易中招的地方：诱饵题藏在会被检索回来的资料里，不需要攻破任何一个部件，光是被正常检索一次就够了。
+
+Agent 系统还有一种更朴素的版本。第四章提过，Agent 本身就可能自己停不下来，在几个工具之间反复横跳；这个弱点同样能被人故意当靶子打——比如让它爬到一篇被动了手脚的网页，里面链着几十篇"相关文章"，它就会一篇接一篇地跟下去，形成一棵不断扩展的“调用树”（也就是一串递归式的工具调用链），可能一小时都收不住。[^forcepoint]
+
+这类攻击难防的地方在于，它不像提示注入那样能从"模型有没有被骗"去堵——系统全程都在正常工作，没有一步出错，只是没有人告诉它什么时候该停。
+
+### 防御的思路：假设模型一定会被骗，预算一定会被试探
+
+面对提示注入，业界的共识已经很明确：**目前没有办法从模型层面把它彻底根治。** OpenAI 在 2025 年底写道，提示注入"就像网络诈骗和社会工程学一样，不太可能被彻底解决"。[^openai-atlas] 一项由多家 AI 公司的研究者共同完成的研究，测试了 12 种近期提出的防御方法——这些方法原本报告的攻击成功率都接近零，但只要换成会针对防御手段反复调整打法的攻击者，九成以上的方法都被攻破了。[^nasr]
+
+所以 OWASP 2026 版清单的前言说得很直白："别想着造一个骗不倒的模型。把系统围着它搭好，这样模型被骗的时候（它一定会被骗），不会坏掉任何重要的东西。"[^owasp-2026] 这正好落回第三章 3.4 讲过的那条规则：**一切判断和把关只能发生在后端。**
+
+**最小权限，交给后端把关。** 别把密钥和实际执行权交给模型，这些核心命脉必须留在后端代码里。每个操作只给刚好够用的权限，执行前还要靠死规则再核对一遍，不能用模型去监督模型。
+
+**三种能力，最多同时给两种。** 正如 Meta 提出的“Rule of Two”[^rule-of-two]：如果一个 Agent 既能接触不可信内容，又能读取内部敏感数据，还能对外发消息或改数据，风险就会直接拉满（比如 EchoLeak 事件）。如果非要让它同时集齐这三项能力，那它走的每一步都必须由人类亲自批准。
+
+**高风险动作，执行前让人确认。** 系统必须把真正要执行的操作原原本本地展示出来，绝不能只给一句含糊的总结。为了防患于未然，来路不明的网页和邮件绝对不能和内部机密混放在同一个库里，输出端也绝不要自动加载外部链接和图片。
+
+**给资源划红线。** 就像第四章提到的，必须设定最大的运行轮数、消费上限和超时阻断。这不仅能防 Bug 导致的死循环，更是拦截“烧钱攻击”的利器。不仅 API 密钥要拆分权限并定期更换，一旦发现调用量反常，系统必须立刻报警拦截而不是继续放行。
+
+**用会"见招拆招"的攻击去测试防御。** 千万别相信用固定题库测出来的“零风险”，因为真实的黑客会根据你的防御不断变换打法。安全测试必须像真人对战一样，用动态对抗来摸清系统的真正底线。
+
+**两个最值得记住的结论：**
+
+1. 这一章的风险分两类：一类是模型分不清"指令"和"资料"，被骗着去做坏事（提示注入、越狱）；另一类是系统没被骗，只是被人指使着把本职工作做个没完（资源消耗）。两类目前都没有办法从模型层面根治。
+2. 决定后果大小的，不是系统有没有被骗、有没有被过度消耗，而是**它手里的权限有多大、预算有没有上限**——这也是为什么最小权限和硬性上限，是这两类风险共同的解法。
+
+[^ncsc]: UK National Cyber Security Centre, *Prompt injection is not SQL injection (it may be worse)*, 2025-12-08。原文：「Current large language models (LLMs) simply do not enforce a security boundary between instructions and data inside a prompt.」https://www.ncsc.gov.uk/sites/default/files/pdfs/blog/prompt-injection-is-not-sql-injection.pdf
+
+[^greshake]: Greshake et al., *Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection*, 2023（首次系统提出间接提示注入）。https://arxiv.org/abs/2302.12173
+
+[^echoleak]: NVD, CVE-2025-32711。https://nvd.nist.gov/vuln/detail/CVE-2025-32711 ；Microsoft Security Response Center。https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711 ；Reddy & Gujral, *EchoLeak: The First Real-World Zero-Click Prompt Injection Exploit in a Production LLM System*, 2025。https://arxiv.org/abs/2509.10540
+
+[^mcp-auth]: Model Context Protocol 规范，Authorization 一节：「Authorization is OPTIONAL for MCP implementations.」2025-06-18 版与 2026-07-28 版均如此；授权框架首次加入于 2025-03-26 版。https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization ；https://modelcontextprotocol.io/specification/2025-03-26/changelog
+
+[^postmark]: The Hacker News, *First Malicious MCP Server Found Stealing Emails in Rogue Postmark-MCP Package*, 2025-09-29（原始披露者 Koi Security 的博客链接已失效，故以此文为准）。https://thehackernews.com/2025/09/first-malicious-mcp-server-found.html
+
+[^owasp-2026]: OWASP GenAI Security Project, *OWASP GenAI LLM Top 10 2026*, 2026-08（前言；LLM01 提示注入；LLM03 过度授权；LLM06 资源无限消耗）。2026 版排名首次把真实事件数据纳入计算：分析 7,714 起已报告的 AI 安全事件，其中 6,639 起信息完整到可以归类，按专家共识 75%、事件数据 25% 的权重合并打分；原始文档未能直接读取全文，相关方法论与排名变动经 Cloud Security Alliance 的研究笔记交叉核实。https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/ ；Cloud Security Alliance, *OWASP's 2026 LLM Top 10: Incident Data Meets Judgment*。https://labs.cloudsecurityalliance.org/research/csa-research-note-owasp-llm-top10-2026-incident-weighted-202/
+
+[^openai-atlas]: OpenAI, *Hardening Atlas against prompt injection*, 2025-12-22。原文：「Prompt injection, much like scams and social engineering on the web, is unlikely to ever be fully "solved".」https://openai.com/index/hardening-atlas-against-prompt-injection/
+
+[^rule-of-two]: Meta, *Agents Rule of Two: A Practical Approach to AI Agent Security*, 2025-08-31。https://ai.meta.com/blog/practical-ai-agent-security/
+
+[^nasr]: Nasr, Carlini, Tramèr et al., *The Attacker Moves Second: Stronger Adaptive Attacks Bypass Defenses Against LLM Jailbreaks and Prompt Injections*, 2025。https://arxiv.org/abs/2510.09023
+
+[^forcepoint]: Forcepoint X-Labs, *Unbounded Consumption: When AI Agents Never Learn to Stop Spending*, 2026。文中列举了两个典型的消耗型风险场景：一是测试环境 API Key 外泄导致短时间内请求暴增、账单超支；二是“深度研究”类 Agent 爬取到被恶意植入大量虚假链接的网页后，触发无休止的递归爬取，导致任务长时间失控。https://www.forcepoint.com/blog/x-labs/unbounded-consumption
+
+[^overthink]: Kumar, Roh, Naseh, Karpinska, Iyyer, Houmansadr & Bagdasarian, *OverThink: Slowdown Attacks on Reasoning LLMs*。向可能被检索到的内容里注入"诱饵"推理题，在 FreshQA 数据集上令推理 token 增加 13 倍，在 SQuAD 上增加 46 倍，最终答案保持正确。https://arxiv.org/abs/2502.02542
+
+## 第七章 · 跳出 RAG：LLM 系统的全景
+
+前面几章把 RAG 讲透了，也看了它在合规和安全上的风险，但需要提醒一句：**RAG 只是 LLM 众多用法中的一种**，专门解决"知识"这一类问题。真实世界里，把 LLM 用起来的方式还有好几种，各自对应不同的需求。本章梳理这几种形态，说明 RAG 在其中所处的位置及其适用边界。
+
+区分这几种形态，可以从一个具体场景入手：当你拿到一个任务、准备交给模型时，先问一句——**要完成它，模型缺的是什么？** 是缺知识，还是缺自主判断，还是缺某种能力？顺着这个问题往下分，下面六种形态各自对应一种情形。
 
 **任务不依赖外部知识 → 直接用提示词（Prompt）**
 
@@ -472,15 +619,19 @@ MaaS（Model-as-a-Service，模型即服务）指通过网络调用的云端模�
 
 **资料就在手边、量也不大 → 长上下文（Long Context）**
 
-如果答案在几份文档里，而这些文档整个加起来也塞得进模型的上下文窗口，那最简单的做法就是把它们全部放进提示词，让模型直接读。2026 年前沿模型的上下文窗口已达百万 token 级别，一份几百页的手册可以整个装下，不必切块、不必检索。代价是每次提问都要把全部资料重读一遍，量一大就又慢又贵，而且资料越长、关键内容越容易被模型忽略。
+如果答案在几份文档里，而这些文档整个加起来也塞得进模型的上下文窗口，那最简单的做法就是把它们全部放进提示词，让模型直接读。如今 Anthropic、OpenAI、Google 的旗舰模型，官方标注的上下文窗口都在百万 token 左右（Claude Opus 5 / Sonnet 5、GPT-6 Astra 约 105 万、Gemini 3.1 Pro 约 100 万），Meta 的开源模型 Llama 4 Scout 更标到 1000 万[^ctx]，一份几百页的手册理论上可以整个装下，不必切块、不必检索。但标称值不等于实际可用：NVIDIA 的 RULER 测试发现，宣称支持 32K 以上上下文的模型里，只有一半能在 32K 长度上仍保持令人满意的表现。[^ruler] 而且就算模型稳得住，代价依然摆在那：每次提问都要把全部资料重读一遍，量一大就又慢又贵，资料越长，关键内容也越容易被忽略。
 
 **资料太多，塞不下 → RAG**
 
-当知识库大到无法整个放进上下文（成千上万份文档、且不断更新），就必须先"查"出相关的几段再喂给模型——这正是前五章讲的 RAG。它的本质是：用检索把"太多"筛成"刚好"。所以 RAG 和长上下文其实是同一个知识问题的两种解法，分界线就在于资料量塞不塞得下。
+当知识库大到无法整个放进上下文（成千上万份文档、且不断更新），就必须先"查"出相关的几段再喂给模型——这正是前面几章讲的 RAG。它的本质是：用检索把"太多"筛成"刚好"。所以 RAG 和长上下文其实是同一个知识问题的两种解法，分界线就在于资料量塞不塞得下。
 
 **缺的不是资料，是"下一步做什么"的判断 → Agent**
 
-有些任务卡住不是因为缺知识，而是没法一步到位——要先查这个、根据结果再决定查那个，甚至要真的动手操作外部系统。这时需要的是让模型自己规划、调用工具、循环推进，也就是第四章的 Agent。据 Gartner 预测[^gartner]，到 2026 年底将有四成企业应用带上面向特定任务的 Agent，而一年前这个比例还不到 5%。
+有些任务卡住不是因为缺知识，而是没法一步到位——要先查这个、根据结果再决定查那个，甚至要真的动手操作外部系统。这时需要的是让模型自己规划、调用工具、循环推进，也就是第四章的 Agent。据 Gartner 预测[^gartner]，到 2026 年底将有四成企业应用带上面向特定任务的 Agent，而一年前这个比例还不到 5%。不过 Gartner 同时预测，到 2027 年底，将有超过四成的 Agent 项目会因为成本攀升、商业价值不明或风险控制不足而被取消[^gartner-cancel]。所以，会不会用 Agent 是一回事，用得值不值又是另一回事。
+
+**缺的是"想清楚"的时间 → 推理模型**
+
+有些任务卡住，既不是缺资料，也不是要动手操作，而是需要一步步推演：多条件的规则判断、需要先拆解再验证的问题、复杂的计算。这类任务适合交给推理模型，它会先在内部推演一遍再作答，代价是更慢、更贵（见第三章 3.3）。推理模型和其他几种形态并不冲突，现在很多 Agent 的"大脑"本身就是推理模型。
 
 **缺的是能力或行为本身 → 微调（Fine-tuning）**
 
@@ -492,11 +643,17 @@ MaaS（Model-as-a-Service，模型即服务）指通过网络调用的云端模�
 
 **小结：选哪种，取决于你缺什么**
 
-面对一个任务，逐项过一遍就能定下方案：缺知识就补资料（量小用长上下文，量大用 RAG），需要多步自主就上 Agent，行为不稳定就用微调。缺一样补一样，缺几样就叠几样——真实系统多半是这样按需拼出来的组合，而非单一形态。
+面对一个任务，逐项过一遍就能定下方案：缺知识就补资料（量小用长上下文，量大用 RAG），需要多步自主就上 Agent，需要多步推演就用推理模型，行为不稳定就用微调。缺一样补一样，缺几样就叠几样——真实系统多半是这样按需拼出来的组合，而非单一形态。
 
 整本书讲的这套 RAG，是这张地图上最常用、也最适合入门理解的一块，但它终究只是一块，更多时候是和别的形态搭配着一起用的。
 
 [^gartner]: Gartner, *Gartner Predicts 40% of Enterprise Apps Will Feature Task-Specific AI Agents by 2026, Up from Less Than 5% in 2025*，新闻稿，2025-08-26。https://www.gartner.com/en/newsroom/press-releases/2025-08-26-gartner-predicts-40-percent-of-enterprise-apps-will-feature-task-specific-ai-agents-by-2026-up-from-less-than-5-percent-in-2025
+
+[^gartner-cancel]: Gartner, *Gartner Predicts Over 40% of Agentic AI Projects Will Be Canceled by End of 2027*，新闻稿，2025-06-25（基于对 3,400 多家正在投资该技术的企业的调研，原因包括成本攀升、商业价值不明确、风险管控不足）。https://www.gartner.com/en/newsroom/press-releases/2025-06-25-gartner-predicts-over-40-percent-of-agentic-ai-projects-will-be-canceled-by-end-of-2027
+
+[^ctx]: Anthropic, *Context windows*：「up to 1M tokens, depending on the model」。https://platform.claude.com/docs/en/build-with-claude/context-windows ；OpenAI, *GPT-6 Astra model page*：1.05M-token context window。https://developers.openai.com/api/docs/models/gpt-6-astra ；Google DeepMind, *Gemini 3.1 Pro model card*：「a token context window of up to 1M」。https://deepmind.google/models/model-cards/gemini-3-1-pro/ ；Meta, *The Llama 4 herd*, 2025-04-05：「Llama 4 Scout dramatically increases the supported context length from 128K in Llama 3 to an industry leading 10 million tokens.」https://ai.meta.com/blog/llama-4-multimodal-intelligence/
+
+[^ruler]: Hsieh et al. (NVIDIA), *RULER: What's the Real Context Size of Your Long-Context Language Models?*, 2024。原文：「only half of them can maintain satisfactory performance at the length of 32K」。https://arxiv.org/abs/2404.06654
 
 ## 附录 · 工具库概览
 
@@ -507,12 +664,12 @@ MaaS（Model-as-a-Service，模型即服务）指通过网络调用的云端模�
 | 环节 | 这一步在做什么 | 常见工具/平台 |
 |---|---|---|
 | 文档解析／切块 | 把 PDF、Word 等格式读成文字，并切成小段 | Unstructured、LlamaParse、LlamaIndex 的 loader 生态、Docling |
-| 嵌入模型 | 把文字转成向量 | OpenAI embeddings、Cohere、BGE、Voyage、sentence-transformers |
+| 嵌入模型 | 把文字转成向量 | OpenAI embeddings、Cohere、BGE、Voyage（2025 年起属于 MongoDB[^voyage]）、sentence-transformers |
 | 向量数据库 | 存向量、做相似度检索 | Pinecone、Weaviate、Milvus、Chroma、Qdrant、pgvector |
-| 重排模型 | 对粗筛结果精排、只留最切题的几条 | Cohere Rerank、BGE-reranker、Jina Reranker |
+| 重排模型 | 对粗筛结果精排、只留最切题的几条 | Cohere Rerank、BGE-reranker、Jina Reranker（Jina AI 2025 年起属于 Elastic[^jina]） |
 | 编排／RAG框架 | 把整套流程串起来的开发框架 | LangChain、LlamaIndex、Haystack、RAGFlow |
-| Agent框架 | 支持 ReAct 循环、多智能体协作的开发框架 | LangGraph、AutoGen、CrewAI |
-| 推理服务 | 让大模型真正跑起来、对外提供服务 | vLLM、TGI（Text Generation Inference）、SGLang |
+| Agent框架 | 支持 ReAct 循环、多智能体协作的开发框架 | LangGraph、CrewAI、Microsoft Agent Framework；模型厂商自己的 SDK：OpenAI Agents SDK、Claude Agent SDK、Google ADK；AutoGen（已进入维护模式，继任者是 Microsoft Agent Framework[^autogen]） |
+| 推理服务 | 让大模型真正跑起来、对外提供服务 | vLLM、SGLang、TGI（Text Generation Inference，2026 年 3 月已归档，官方建议改用 vLLM 或 SGLang[^tgi]） |
 | 评估 | 衡量 RAG/Agent 系统表现好坏 | RAGAS、DeepEval、TruLens、promptfoo |
 | 可观测性 | 记录、追踪、排查整套系统的运行状况 | LangSmith、Langfuse、Arize Phoenix |
 
@@ -521,8 +678,20 @@ MaaS（Model-as-a-Service，模型即服务）指通过网络调用的云端模�
 **按品牌生态（同一家公司/社区出的一整套产品线）**：
 
 - **LangChain 系**：LangChain（基础框架）+ LangGraph（专做 Agent 编排）+ LangSmith（可观测性/调试），三者是同一生态里互相搭配的产品。
-- **Hugging Face 系**：模型库（全球最大的开源模型集散地）+ Transformers（方便加载各种模型的程序库）+ TGI（推理服务）+ 一整套开源工具。
-- **云厂商 MaaS**：AWS Bedrock、Azure AI Foundry、Google Vertex AI 这类服务，把嵌入模型和生成模型都打包成托管好的云端服务，企业无需自建服务器即可调用。
+- **Hugging Face 系**：模型库（全球最大的开源模型集散地）+ Transformers（方便加载各种模型的程序库）+ TGI（推理服务，已归档）+ 一整套开源工具。
+- **云厂商 MaaS**：AWS Bedrock、Microsoft Foundry（原 Azure AI Foundry，2026 年 1 月起更名[^foundry]）、Google Gemini Enterprise Agent Platform（2026 年 4 月由 Vertex AI 演进而来[^gemini-platform]）这类服务，把嵌入模型和生成模型都打包成托管好的云端服务，企业无需自建服务器即可调用。
+
+[^voyage]: MongoDB 新闻稿，2025-02-24：收购 Voyage AI。https://investors.mongodb.com/news-releases/news-release-details/mongodb-announces-acquisition-voyage-ai-enable-organizations
+
+[^jina]: Elastic 新闻稿，2025-10-09：完成对 Jina AI 的收购。https://www.elastic.co/blog/elastic-jina-ai
+
+[^autogen]: Microsoft, *autogen* 仓库 README：「AutoGen is now in maintenance mode... community managed going forward」，继任者为 Microsoft Agent Framework。https://github.com/microsoft/autogen ；Microsoft, *agent-framework* 仓库。https://github.com/microsoft/agent-framework
+
+[^tgi]: Hugging Face, *text-generation-inference* 仓库 README：「text-generation-inference is now in maintenance mode」；仓库已于 2026-03-21 归档。https://github.com/huggingface/text-generation-inference
+
+[^foundry]: Microsoft 2026 年 1 月产品条款更新：Azure AI Foundry 更名为 Microsoft Foundry。https://www.microsoft.com/licensing/terms/product/changes/all
+
+[^gemini-platform]: Google Cloud, *Introducing Gemini Enterprise Agent Platform*, 2026-04-22（Vertex AI 由此演进而来，原有功能并入新平台）。https://cloud.google.com/blog/products/ai-machine-learning/introducing-gemini-enterprise-agent-platform
 
 ---
 
@@ -537,4 +706,6 @@ MaaS（Model-as-a-Service，模型即服务）指通过网络调用的云端模�
 - **合规**：机密内容被拼进 Prompt、送往云端的那一刻最敏感；日志是最容易被忽略的明文留存点。
 - **Agent**：Thought（想）→ Action（做）→ Observation（看结果）不断循环；模型是大脑，harness 是身体，harness 的质量与模型同等重要。
 - **代际之分**：循环规则写死在代码里的是经典 RAG，把"要不要再查、怎么查"交给模型临场判断的才是代理式。变的不是组件，是指挥权。
-- **全景**：RAG 只是 LLM 用法之一。缺知识补资料（量小用长上下文、量大用 RAG），缺自主性上 Agent，缺能力或行为靠微调。选哪种，看任务缺的是什么。
+- **安全**：风险分两类——模型分不清"指令"和"资料"被骗着干坏事（提示注入、越狱），或是没被骗、只是被指使着把本职工作做个没完（资源消耗/烧钱攻击）。两类都没法从模型层面根治，防御靠系统兜底：最小权限、硬性上限、高风险动作人工确认。
+- **推理模型**：先想后答。思考也是逐字 decode 出来的，占上下文、按输出计费，所以首字延迟更长、成本更高。
+- **全景**：RAG 只是 LLM 用法之一。缺知识补资料（量小用长上下文、量大用 RAG），缺自主性上 Agent，缺"想清楚"的时间用推理模型，缺能力或行为靠微调。选哪种，看任务缺的是什么。
