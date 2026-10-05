@@ -3,6 +3,8 @@ import re, markdown, html, os, shutil
 from datetime import date
 
 BASE_URL = "https://llmknowledge.pages.dev"
+# IndexNow（Bing / Yandex 等）验证密钥：构建时写成 site/<key>.txt，ping_indexnow.py 用它推送 URL
+INDEXNOW_KEY = "61017d3005468b906e007dfefd16e7af"
 
 # ===== 语言配置：新增语言只需在这里加一个条目 =====
 # links: 从本语言页面跳到目标语言同一章节页面的相对路径前缀
@@ -658,6 +660,10 @@ def write_robots():
     open("site/robots.txt", "w", encoding="utf-8").write(txt)
 
 
+def write_indexnow_key():
+    open("site/%s.txt" % INDEXNOW_KEY, "w", encoding="utf-8").write(INDEXNOW_KEY)
+
+
 def write_llms_txt(sections_by_lang):
     lines = [
         "# Understanding Modern LLM Systems: A Field Guide to RAG, Agents, and Beyond",
@@ -704,6 +710,7 @@ for lang_key in LANGS:
 write_sitemap(sections_by_lang)
 write_robots()
 write_llms_txt(sections_by_lang)
-print("wrote sitemap.xml, robots.txt, llms.txt")
+write_indexnow_key()
+print("wrote sitemap.xml, robots.txt, llms.txt, IndexNow key")
 
 print("total %d pages" % total)
