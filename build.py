@@ -116,7 +116,7 @@ def endnote_html(lang_key, sec_id):
         return (
             '<div class="endnote">\n'
             "  <p>%s</p>\n"
-            "  <p>If you'd rather have it off the browser: 43 English pages / 30 Chinese pages, "
+            "  <p>If you'd rather have it off the browser: 50 English pages / 39 Chinese pages, "
             "typeset as PDF and EPUB, 7 original diagrams, 49 footnotes to primary sources — "
             "four files in one download, $9.</p>\n"
             '  <p><a href="%s">Get the PDF + EPUB on Gumroad →</a></p>\n'
@@ -125,7 +125,7 @@ def endnote_html(lang_key, sec_id):
     return (
         '<div class="endnote">\n'
         "  <p>%s</p>\n"
-        "  <p>想把它从浏览器里拿出来：中文 30 页 / 英文 43 页，排版好的 PDF 与 EPUB、"
+        "  <p>想把它从浏览器里拿出来：中文 39 页 / 英文 50 页，排版好的 PDF 与 EPUB、"
         "7 张原创示意图、49 条一手来源脚注——四个文件一次下载，$9 起。"
         "付款支持境外银行卡与 PayPal。</p>\n"
         '  <p><a href="%s">在 Gumroad 获取 PDF + EPUB →</a></p>\n'
