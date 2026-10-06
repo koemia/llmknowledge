@@ -141,12 +141,20 @@ def fname(sec_id):
     return "index.html" if sec_id == "preface" else sec_id + ".html"
 
 
+def slug(sec_id):
+    """对外 URL 不带 .html：Cloudflare Pages 会把 /chN.html 308 到 /chN，
+    链接直接写无后缀形式，省掉爬虫一次重定向。磁盘文件名仍由 fname() 决定。"""
+    return "" if sec_id == "preface" else sec_id
+
+
+def rel_href(prefix, sec_id):
+    """页面内相对链接；首页落到目录本身（./ 或 ../ 或 zh/）。"""
+    return (prefix + slug(sec_id)) or "./"
+
+
 def url_for(cfg, sec_id):
-    """首页用干净的 / 或 /zh/，其余页面用 /chN.html 这种实际文件名。"""
-    fn = fname(sec_id)
-    if fn == "index.html":
-        return BASE_URL + cfg["url_prefix"]
-    return BASE_URL + cfg["url_prefix"] + fn
+    """首页用干净的 / 或 /zh/，其余页面用 /chN（无 .html 后缀）。"""
+    return BASE_URL + cfg["url_prefix"] + slug(sec_id)
 
 
 def parse_sections(src_path):
@@ -197,6 +205,7 @@ TEMPLATE = r'''<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="google-site-verification" content="N-Eq_2c5aG0rHDGOkAvz7jPIxSpWsmKo1mIh6O4yZ1U">
 <title>__PAGE_TITLE__</title>
+__CANONICAL__
 __HREFLANG__
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -520,7 +529,7 @@ def nav_html_for(sections, active_id):
             '<a class="nav-item%s" href="%s" data-target="%s">'
             '<span class="nav-mark">%s</span>'
             '<span class="nav-label">%s</span></a>'
-            % (active, fname(s["id"]), s["id"], marker, html.escape(s["nav"]))
+            % (active, rel_href("", s["id"]), s["id"], marker, html.escape(s["nav"]))
         )
     return "\n".join(items)
 
@@ -529,7 +538,7 @@ def lang_switch_html(current_lang, sec_id):
     links = LANGS[current_lang]["links"]
     parts = []
     for target in ["zh", "en"]:
-        href = links[target] + fname(sec_id)
+        href = rel_href(links[target], sec_id)
         current = ' aria-current="page"' if target == current_lang else ""
         parts.append('<a href="%s"%s>%s</a>' % (href, current, LANGS[target]["switch_label"]))
     return ('<div class="lang-switch" role="group" aria-label="Language">\n'
@@ -554,12 +563,12 @@ def content_for(sections, i, prev_label, next_label, lang_key):
     pn = ['<nav class="pager">']
     if prev_s:
         pn.append('<a class="pager-prev" href="%s"><span class="pager-dir">← %s</span>'
-                  '<span class="pager-ttl">%s</span></a>' % (fname(prev_s["id"]), prev_label, html.escape(prev_s["nav"])))
+                  '<span class="pager-ttl">%s</span></a>' % (rel_href("", prev_s["id"]), prev_label, html.escape(prev_s["nav"])))
     else:
         pn.append('<span class="pager-spacer"></span>')
     if next_s:
         pn.append('<a class="pager-next" href="%s"><span class="pager-dir">%s →</span>'
-                  '<span class="pager-ttl">%s</span></a>' % (fname(next_s["id"]), next_label, html.escape(next_s["nav"])))
+                  '<span class="pager-ttl">%s</span></a>' % (rel_href("", next_s["id"]), next_label, html.escape(next_s["nav"])))
     else:
         pn.append('<span class="pager-spacer"></span>')
     pn.append("</nav>")
@@ -607,6 +616,7 @@ def build_lang(lang_key):
         out = (TEMPLATE
                .replace("__LANG__", cfg["lang_code"])
                .replace("__PAGE_TITLE__", html.escape(cfg["page_title"]))
+               .replace("__CANONICAL__", '<link rel="canonical" href="%s">' % url_for(cfg, s["id"]))
                .replace("__HREFLANG__", hreflang_tags(s["id"]))
                .replace("__BOOK_TITLE__", html.escape(cfg["book_title"]))
                .replace("__BOOK_SUB__", html.escape(cfg["book_sub"]))
