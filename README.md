@@ -27,15 +27,15 @@ If you work on LLM training or inference optimization, this will read as introdu
 | | Chapter |
 | --- | --- |
 | [Before We Begin](https://llmknowledge.pages.dev/) | What problem is this system solving? |
-| [Chapter One · RAG Core Flow](https://llmknowledge.pages.dev/ch1.html) | The RAG pipeline — how a question becomes a cited answer |
-| [Chapter Two · Model Adaptation](https://llmknowledge.pages.dev/ch2.html) | Adapting a model — fine-tuning vs. RAG, and what each one fixes |
-| [Chapter Three · Deep Dive](https://llmknowledge.pages.dev/ch3.html) | Four core mechanisms — embeddings, retrieval, serving, architecture |
-| [Chapter Four · Agents](https://llmknowledge.pages.dev/ch4.html) | Agents — function calling, MCP, memory, and where they break |
-| [Chapter Five · The Compliance Perspective](https://llmknowledge.pages.dev/ch5.html) | A compliance view — where confidential data actually goes |
-| [Chapter Six · The Security Perspective](https://llmknowledge.pages.dev/ch6.html) | A security view — prompt injection and other risks, from the attacker's side |
-| [Chapter Seven · Beyond RAG](https://llmknowledge.pages.dev/ch7.html) | Beyond RAG — the landscape, organized by what the model is missing |
-| [Appendix · Toolkit Overview](https://llmknowledge.pages.dev/appendix.html) | Toolkit overview |
-| [Quick Reference](https://llmknowledge.pages.dev/cheatsheet.html) | The whole guide on one page |
+| [Chapter One · RAG Core Flow](https://llmknowledge.pages.dev/ch1) | The RAG pipeline — how a question becomes a cited answer |
+| [Chapter Two · Model Adaptation](https://llmknowledge.pages.dev/ch2) | Adapting a model — fine-tuning vs. RAG, and what each one fixes |
+| [Chapter Three · Deep Dive](https://llmknowledge.pages.dev/ch3) | Four core mechanisms — embeddings, retrieval, serving, architecture |
+| [Chapter Four · Agents](https://llmknowledge.pages.dev/ch4) | Agents — function calling, MCP, memory, and where they break |
+| [Chapter Five · The Compliance Perspective](https://llmknowledge.pages.dev/ch5) | A compliance view — where confidential data actually goes |
+| [Chapter Six · The Security Perspective](https://llmknowledge.pages.dev/ch6) | A security view — prompt injection and other risks, from the attacker's side |
+| [Chapter Seven · Beyond RAG](https://llmknowledge.pages.dev/ch7) | Beyond RAG — the landscape, organized by what the model is missing |
+| [Appendix · Toolkit Overview](https://llmknowledge.pages.dev/appendix) | Toolkit overview |
+| [Quick Reference](https://llmknowledge.pages.dev/cheatsheet) | The whole guide on one page |
 
 ## What makes it different
 

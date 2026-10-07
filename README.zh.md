@@ -27,15 +27,15 @@
 | | 章节 |
 | --- | --- |
 | [开始之前](https://llmknowledge.pages.dev/zh/) | 这个系统在解决什么问题 |
-| [第一章](https://llmknowledge.pages.dev/zh/ch1.html) | RAG 核心流程——一个问题如何变成带出处的回答 |
-| [第二章](https://llmknowledge.pages.dev/zh/ch2.html) | 模型适配——微调与 RAG，各自解决什么问题 |
-| [第三章](https://llmknowledge.pages.dev/zh/ch3.html) | 四个核心机制——嵌入、检索、推理服务、系统架构 |
-| [第四章](https://llmknowledge.pages.dev/zh/ch4.html) | Agent——函数调用、MCP、记忆，以及它会在哪里出问题 |
-| [第五章](https://llmknowledge.pages.dev/zh/ch5.html) | 合规视角——机密数据到底去了哪里 |
-| [第六章](https://llmknowledge.pages.dev/zh/ch6.html) | 安全视角——提示注入与其他风险，换成攻击者的角度再看一遍 |
-| [第七章](https://llmknowledge.pages.dev/zh/ch7.html) | RAG 之外——按「模型缺什么」组织的全景 |
-| [附录](https://llmknowledge.pages.dev/zh/appendix.html) | 工具库概览 |
-| [速记卡片](https://llmknowledge.pages.dev/zh/cheatsheet.html) | 整本书浓缩在一页里 |
+| [第一章](https://llmknowledge.pages.dev/zh/ch1) | RAG 核心流程——一个问题如何变成带出处的回答 |
+| [第二章](https://llmknowledge.pages.dev/zh/ch2) | 模型适配——微调与 RAG，各自解决什么问题 |
+| [第三章](https://llmknowledge.pages.dev/zh/ch3) | 四个核心机制——嵌入、检索、推理服务、系统架构 |
+| [第四章](https://llmknowledge.pages.dev/zh/ch4) | Agent——函数调用、MCP、记忆，以及它会在哪里出问题 |
+| [第五章](https://llmknowledge.pages.dev/zh/ch5) | 合规视角——机密数据到底去了哪里 |
+| [第六章](https://llmknowledge.pages.dev/zh/ch6) | 安全视角——提示注入与其他风险，换成攻击者的角度再看一遍 |
+| [第七章](https://llmknowledge.pages.dev/zh/ch7) | RAG 之外——按「模型缺什么」组织的全景 |
+| [附录](https://llmknowledge.pages.dev/zh/appendix) | 工具库概览 |
+| [速记卡片](https://llmknowledge.pages.dev/zh/cheatsheet) | 整本书浓缩在一页里 |
 
 ## 和其他资料的区别
 
