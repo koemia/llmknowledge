@@ -73,6 +73,101 @@ DESCRIPTIONS = {
     },
 }
 
+# ===== SEO：每页 <title> 与 meta description =====
+# title 写成搜索词会命中的说法（章名 + 关键词），后缀统一挂书名短称；首页单独写。
+# description 控制在英文 ~150 字符、中文 ~80 字以内，超出部分搜索结果会截断。
+TITLE_SUFFIX = {
+    "en": " | LLM Systems Field Guide",
+    "zh": " | 理解现代大语言模型系统",
+}
+
+PAGE_TITLES = {
+    "en": {
+        "preface": "Understanding Modern LLM Systems: A Free Field Guide to RAG, Agents, and Beyond",
+        "ch1": "How RAG Works: The 8-Step Pipeline, Explained",
+        "ch2": "Fine-Tuning vs. RAG: What Each One Actually Fixes",
+        "ch3": "Embeddings, Vector Search & LLM Serving Explained",
+        "ch4": "AI Agents Explained: ReAct, Function Calling, MCP, Memory",
+        "ch5": "RAG Compliance: Where Confidential Data Actually Goes",
+        "ch6": "LLM Security: Prompt Injection and Denial-of-Wallet",
+        "ch7": "Beyond RAG: Long Context, Agents, Reasoning Models, Fine-Tuning",
+        "appendix": "RAG & Agent Toolkit: Vector DBs, Rerankers, Frameworks",
+        "cheatsheet": "LLM Systems Cheat Sheet: Core Concepts on One Page",
+    },
+    "zh": {
+        "preface": "理解现代大语言模型系统：从 RAG 到 Agent 的概念地图（免费在线阅读）",
+        "ch1": "RAG 原理：一个问题怎么变成带引用的答案（八步流程）",
+        "ch2": "微调还是 RAG？模型适配的三种手段各解决什么问题",
+        "ch3": "Embedding、向量检索、KV Cache：大模型系统的四个核心机制",
+        "ch4": "AI Agent 智能体详解：ReAct、函数调用、MCP 与记忆",
+        "ch5": "RAG 合规：机密数据在大模型系统里流向哪里",
+        "ch6": "大模型安全：提示注入与烧钱攻击",
+        "ch7": "跳出 RAG：长上下文、Agent、推理模型、微调怎么选",
+        "appendix": "RAG 与 Agent 工具库：向量数据库、重排模型、开发框架",
+        "cheatsheet": "大模型系统速记卡片：核心概念一页复习",
+    },
+}
+
+META_DESCRIPTIONS = {
+    "en": {
+        "preface": ("A free, book-length guide to how modern LLM systems work — RAG, fine-tuning, "
+                    "agents, compliance, and security. No math or coding background needed."),
+        "ch1": ("The full RAG pipeline in eight steps — from query rewriting and hybrid retrieval "
+                "to guardrails and citations — plus offline indexing and the four feedback loops."),
+        "ch2": ("Knowledge gap, behavior gap, comprehension gap: when to use RAG, fine-tuning (SFT, RFT, LoRA), "
+                "or continued pretraining — and why fine-tuning can't teach new facts."),
+        "ch3": ("How embeddings, vector search (HNSW, IVF, DiskANN), hybrid search, reranking, KV cache, "
+                "prefill vs. decode, and continuous batching actually work."),
+        "ch4": ("When you need an agent and when you don't. The ReAct loop, function calling, MCP, "
+                "memory, agentic RAG — and the costs and failure modes that come with them."),
+        "ch5": ("Where confidential data goes in a RAG system: at rest, in transit, in use and logs, where it lives "
+                "and who can see it. Plus embedding inversion and soft deletion."),
+        "ch6": ("LLM security from the attacker's side: prompt injection, jailbreaks, and denial-of-wallet "
+                "attacks, and why defense has to live in the system, not the model."),
+        "ch7": ("Prompting, long context, RAG, agents, reasoning models, fine-tuning — a map of LLM "
+                "system patterns, organized by what the model is missing for the task."),
+        "appendix": ("Common 2026 tools for each pipeline stage: document parsing, embedding models, "
+                     "vector databases, rerankers, RAG and agent frameworks, evaluation."),
+        "cheatsheet": ("The core takeaways of the whole guide on one page: embeddings, retrieval, ANN, "
+                       "KV cache, agents, compliance, security, and the full landscape."),
+    },
+    "zh": {
+        "preface": "免费在线阅读的大模型系统入门书：RAG、微调、Agent、合规与安全，写给产品经理、项目经理、售前、创业者和需要对接 AI 项目的管理者，不需要数学或编程基础。",
+        "ch1": "用八个步骤讲清 RAG 全流程：问题改写、混合检索、重排、组装提示词、生成、护栏、引用、日志，外加离线索引和四个回环。",
+        "ch2": "模型不知道、不会说、听不懂：什么时候用 RAG，什么时候用微调（SFT、RFT、LoRA）或继续预训练，以及为什么微调学不会新知识。",
+        "ch3": "Embedding 怎么表示语义，向量检索（HNSW、IVF、DiskANN）与混合检索、重排怎么配合，KV Cache、prefill 与 decode、连续批处理怎么工作。",
+        "ch4": "什么时候需要 Agent，什么时候不需要。ReAct 循环、函数调用、MCP、记忆、Agentic RAG，以及随之而来的代价和风险。",
+        "ch5": "机密数据在 RAG 系统里的四种状态：静态、传输、使用与日志、落地与权限。向量可逆、软删除、脱敏和权限丢失这些容易忽略的风险。",
+        "ch6": "换成攻击者的角度看大模型安全：提示注入、越狱和烧钱攻击，以及为什么防御只能落在系统层，而不是模型本身。",
+        "ch7": "提示词、长上下文、RAG、Agent、推理模型、微调：按「模型缺什么」整理的大模型应用全景，帮你判断该选哪一种。",
+        "appendix": "按流程环节整理的 2026 年常用工具：文档解析、Embedding 模型、向量数据库、重排模型、RAG 与 Agent 框架、评估。",
+        "cheatsheet": "整本书的核心要点浓缩成一页：Embedding、检索、ANN、KV Cache、Agent、合规、安全与全景，适合最后复习。",
+    },
+}
+
+
+def page_title_for(lang_key, sec_id):
+    t = PAGE_TITLES[lang_key][sec_id]
+    return t if sec_id == "preface" else t + TITLE_SUFFIX[lang_key]
+
+
+def head_meta_for(lang_key, cfg, sec_id):
+    title = html.escape(page_title_for(lang_key, sec_id), quote=True)
+    desc = html.escape(META_DESCRIPTIONS[lang_key][sec_id], quote=True)
+    url = url_for(cfg, sec_id)
+    locale = "zh_CN" if lang_key == "zh" else "en_US"
+    return "\n".join([
+        '<meta name="description" content="%s">' % desc,
+        '<meta property="og:type" content="%s">' % ("website" if sec_id == "preface" else "article"),
+        '<meta property="og:site_name" content="%s">' % html.escape(cfg["book_title"], quote=True),
+        '<meta property="og:title" content="%s">' % title,
+        '<meta property="og:description" content="%s">' % desc,
+        '<meta property="og:url" content="%s">' % url,
+        '<meta property="og:locale" content="%s">' % locale,
+        '<meta name="twitter:card" content="summary">',
+    ])
+
+
 # 付费出站短链：每个入口位置一条固定短链，UTM/最终跳转目标在短链服务那端配置，
 # 网站代码这里只放短链本身，不拼接任何 query string。
 SHORT_LINKS = {
@@ -205,6 +300,7 @@ TEMPLATE = r'''<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="google-site-verification" content="N-Eq_2c5aG0rHDGOkAvz7jPIxSpWsmKo1mIh6O4yZ1U">
 <title>__PAGE_TITLE__</title>
+__HEAD_META__
 __CANONICAL__
 __HREFLANG__
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -615,7 +711,8 @@ def build_lang(lang_key):
     for i, s in enumerate(sections):
         out = (TEMPLATE
                .replace("__LANG__", cfg["lang_code"])
-               .replace("__PAGE_TITLE__", html.escape(cfg["page_title"]))
+               .replace("__PAGE_TITLE__", html.escape(page_title_for(lang_key, s["id"])))
+               .replace("__HEAD_META__", head_meta_for(lang_key, cfg, s["id"]))
                .replace("__CANONICAL__", '<link rel="canonical" href="%s">' % url_for(cfg, s["id"]))
                .replace("__HREFLANG__", hreflang_tags(s["id"]))
                .replace("__BOOK_TITLE__", html.escape(cfg["book_title"]))
