@@ -6,7 +6,7 @@
 
 一本免费的、完整篇幅的指南，讲清楚现代大语言模型系统到底怎么运作——RAG、微调、Agent，以及你的数据去了哪里。写给需要理解这些系统、但不打算读论文也不打算写代码的人。
 
-**📖 免费在线阅读：**[llmknowledge.pages.dev/zh/](https://llmknowledge.pages.dev/zh/) · English: [llmknowledge.pages.dev](https://llmknowledge.pages.dev)
+**📖 免费在线阅读：** [中文版](https://llmknowledge.pages.dev/zh/) · [English](https://llmknowledge.pages.dev/)
 
 ---
 

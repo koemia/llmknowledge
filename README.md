@@ -6,7 +6,7 @@
 
 A free, book-length guide to how modern LLM systems actually work — RAG, fine-tuning, agents, and where your data goes — written for people who need to understand these systems without reading the papers or writing the code.
 
-**📖 Read it online, free:** [llmknowledge.pages.dev](https://llmknowledge.pages.dev) · 中文版：[llmknowledge.pages.dev/zh/](https://llmknowledge.pages.dev/zh/)
+**📖 Read it online, free:** [English](https://llmknowledge.pages.dev/) · [中文版](https://llmknowledge.pages.dev/zh/)
 
 ---
 
