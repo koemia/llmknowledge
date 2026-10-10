@@ -2,7 +2,7 @@
 import re, markdown, html, os, shutil
 from datetime import date
 
-BASE_URL = "https://llmknowledge.pages.dev"
+BASE_URL = "https://llmknowledge.org"
 # IndexNow（Bing / Yandex 等）验证密钥：构建时写成 site/<key>.txt，ping_indexnow.py 用它推送 URL
 INDEXNOW_KEY = "61017d3005468b906e007dfefd16e7af"
 

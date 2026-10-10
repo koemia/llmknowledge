@@ -6,7 +6,7 @@
 
 A free, book-length guide to how modern LLM systems actually work — RAG, fine-tuning, agents, and where your data goes — written for people who need to understand these systems without reading the papers or writing the code.
 
-**📖 Read it online, free:** [English](https://llmknowledge.pages.dev/) · [中文版](https://llmknowledge.pages.dev/zh/)
+**📖 Read it online, free:** [English](https://llmknowledge.org/) · [中文版](https://llmknowledge.org/zh/)
 
 ---
 
@@ -26,16 +26,16 @@ If you work on LLM training or inference optimization, this will read as introdu
 
 | | Chapter |
 | --- | --- |
-| [Before We Begin](https://llmknowledge.pages.dev/) | What problem is this system solving? |
-| [Chapter One · RAG Core Flow](https://llmknowledge.pages.dev/ch1) | The RAG pipeline — how a question becomes a cited answer |
-| [Chapter Two · Model Adaptation](https://llmknowledge.pages.dev/ch2) | Adapting a model — fine-tuning vs. RAG, and what each one fixes |
-| [Chapter Three · Deep Dive](https://llmknowledge.pages.dev/ch3) | Four core mechanisms — embeddings, retrieval, serving, architecture |
-| [Chapter Four · Agents](https://llmknowledge.pages.dev/ch4) | Agents — function calling, MCP, memory, and where they break |
-| [Chapter Five · The Compliance Perspective](https://llmknowledge.pages.dev/ch5) | A compliance view — where confidential data actually goes |
-| [Chapter Six · The Security Perspective](https://llmknowledge.pages.dev/ch6) | A security view — prompt injection and other risks, from the attacker's side |
-| [Chapter Seven · Beyond RAG](https://llmknowledge.pages.dev/ch7) | Beyond RAG — the landscape, organized by what the model is missing |
-| [Appendix · Toolkit Overview](https://llmknowledge.pages.dev/appendix) | Toolkit overview |
-| [Quick Reference](https://llmknowledge.pages.dev/cheatsheet) | The whole guide on one page |
+| [Before We Begin](https://llmknowledge.org/) | What problem is this system solving? |
+| [Chapter One · RAG Core Flow](https://llmknowledge.org/ch1) | The RAG pipeline — how a question becomes a cited answer |
+| [Chapter Two · Model Adaptation](https://llmknowledge.org/ch2) | Adapting a model — fine-tuning vs. RAG, and what each one fixes |
+| [Chapter Three · Deep Dive](https://llmknowledge.org/ch3) | Four core mechanisms — embeddings, retrieval, serving, architecture |
+| [Chapter Four · Agents](https://llmknowledge.org/ch4) | Agents — function calling, MCP, memory, and where they break |
+| [Chapter Five · The Compliance Perspective](https://llmknowledge.org/ch5) | A compliance view — where confidential data actually goes |
+| [Chapter Six · The Security Perspective](https://llmknowledge.org/ch6) | A security view — prompt injection and other risks, from the attacker's side |
+| [Chapter Seven · Beyond RAG](https://llmknowledge.org/ch7) | Beyond RAG — the landscape, organized by what the model is missing |
+| [Appendix · Toolkit Overview](https://llmknowledge.org/appendix) | Toolkit overview |
+| [Quick Reference](https://llmknowledge.org/cheatsheet) | The whole guide on one page |
 
 ## What makes it different
 

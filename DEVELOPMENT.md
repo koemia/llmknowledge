@@ -50,6 +50,14 @@ python build.py
 
 连接后，每次 `git push`，Cloudflare 会自动跑上面的命令、重新生成页面并部署。
 
+## 域名
+
+- 正式域名是 `https://llmknowledge.org`，DNS 托管在 Cloudflare。
+- 换域名只需改 `build.py` 里的 `BASE_URL`：canonical、hreflang、Open Graph、sitemap、robots.txt、llms.txt、IndexNow 都从它生成。另外两个 README 里有写死的链接，要一起改。
+- 旧地址 `llmknowledge.pages.dev` 由 Cloudflare 的 Bulk Redirects 301 跳到新域名。**不要用 `_redirects` 做这件事**：它只按路径匹配、不区分域名，新域名也会被跳转，形成死循环。
+- 刻意不放 `404.html`：不存在的路径会回退到首页。
+- 内容更新部署后运行 `python build.py && python ping_indexnow.py`，把最新地址推给 IndexNow。
+
 ## 日常工作流
 
 ```bash
