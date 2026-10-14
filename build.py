@@ -3,6 +3,8 @@ import re, markdown, html, os, shutil
 from datetime import date
 
 BASE_URL = "https://llmknowledge.org"
+# 章末区块的联系邮箱（Cloudflare Email Routing 转发，只收不发）
+CONTACT_EMAIL = "koe@llmknowledge.org"
 # IndexNow（Bing / Yandex 等）验证密钥：构建时写成 site/<key>.txt，ping_indexnow.py 用它推送 URL
 INDEXNOW_KEY = "61017d3005468b906e007dfefd16e7af"
 
@@ -217,7 +219,9 @@ def endnote_html(lang_key, sec_id):
             "typeset as PDF and EPUB, 7 original diagrams, 49 footnotes to primary sources — "
             "four files in one download, $9.</p>\n"
             '  <p><a href="%s">Get the PDF + EPUB on Gumroad →</a></p>\n'
-            "</div>" % (lead, link)
+            '  <p class="note-fine">Corrections, feedback, or trouble paying? Write to '
+            '<a href="mailto:%s">%s</a>.</p>\n'
+            "</div>" % (lead, link, CONTACT_EMAIL, CONTACT_EMAIL)
         )
     return (
         '<div class="endnote">\n'
@@ -226,9 +230,9 @@ def endnote_html(lang_key, sec_id):
         "7 张原创示意图、49 条一手来源脚注——四个文件一次下载，$9 起。"
         "付款支持境外银行卡与 PayPal。</p>\n"
         '  <p><a href="%s">在 Gumroad 获取 PDF + EPUB →</a></p>\n'
-        '  <p class="note-fine">在国内的话，可以在小红书上找到我（比白为竹间），'
-        "中文版的其他获取方式我在安排。</p>\n"
-        "</div>" % (lead, link)
+        '  <p class="note-fine">有勘误、反馈，或者付款上遇到问题，可以写信到 '
+        '<a href="mailto:%s">%s</a>。</p>\n'
+        "</div>" % (lead, link, CONTACT_EMAIL, CONTACT_EMAIL)
     )
 
 
