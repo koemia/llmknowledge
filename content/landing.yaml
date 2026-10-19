@@ -1,0 +1,177 @@
+en:
+  eyebrow: "A free guide for people who work alongside AI projects"
+  title: "Understanding Modern LLM Systems"
+  lede: "How RAG, fine-tuning and agents fit together, and **where your company's data actually goes** once it touches one. Written for PMs, presales and managers. No math, no code."
+  cta_read: "Start reading"
+  cta_quick: "5-minute version"
+  cta_buy: "PDF + EPUB"
+  meta_line: "Free online, no signup · 2nd edition, October 2026"
+  who_question: "Ever sat in a meeting where RAG, agents and MCP flew past you?"
+  who_body: "This is the map I wish I'd had: what each piece does, how they connect, and the questions worth asking a vendor before your data goes in."
+  who_sign: "— koe"
+
+  facts_title: "Six things most people get backwards"
+  facts_sub: "Each one is a section of the book, with sources."
+  facts:
+    - myth: "\"They don't train on our data, so we're fine.\""
+      fact: "Not training on your data and not keeping your data are two different promises."
+      why: "OpenAI's API hasn't trained on customer data by default since March 2023, but abuse-monitoring logs can still hold prompts and responses for up to **30** days."
+      link_label: "Read in Chapter 5"
+      chapter: ch5
+      anchor: ""
+      source: "Source: OpenAI data policy"
+    - myth: "\"We deleted the document.\""
+      fact: "Deleting from a vector database often doesn't delete anything yet."
+      why: "For performance, vector databases default to soft deletion at the metadata layer. The API reports success, but the data may still physically exist. GDPR Article 17 requires real deletion."
+      link_label: "Read in Chapter 5"
+      chapter: ch5
+      anchor: ""
+      source: ""
+    - myth: "\"Embeddings are just numbers. They're anonymous.\""
+      fact: "Short text can be rebuilt from its embedding."
+      why: "In a 2023 study, **92%** of 32-token inputs were recovered word for word from one embedding model, including **89%** of patient full names in a clinical test."
+      link_label: "Read in Chapter 5"
+      chapter: ch5
+      anchor: ""
+      source: "Source: Morris et al., EMNLP 2023"
+    - myth: "\"It only sees what each user can see.\""
+      fact: "Permissions are lost by default when documents become vectors."
+      why: "Pages from Confluence, SharePoint or an internal wiki lose their access controls once embedded, unless someone rebuilds them on purpose."
+      link_label: "Read in Chapter 5"
+      chapter: ch5
+      anchor: ""
+      source: ""
+    - myth: "\"An attacker would need access to our systems.\""
+      fact: "One ordinary-looking email was enough to make Microsoft 365 Copilot leak data."
+      why: "EchoLeak, CVE-2025-32711, disclosed June 2025. Microsoft rated it **9.3** out of 10."
+      link_label: "Read in Chapter 6"
+      chapter: ch6
+      anchor: ""
+      source: "Source: Microsoft advisory"
+    - myth: "\"The chatbot remembers our conversation.\""
+      fact: "The model has no memory. It rereads everything on every turn."
+      why: "Follow-ups like \"what about the second one?\" work because the system sends the whole conversation back with each new question, and the model rereads it on the spot. The longer the chat, the more it rereads every turn."
+      link_label: "Read in Chapter 1"
+      chapter: ch1
+      anchor: ""
+      source: ""
+
+  toc_title: "What's inside"
+  toc_sub: "Each chapter stands on its own. Start with the one your meeting is about."
+  toc:
+    - {id: preface, label: "Start", title: "What problem is this whole system solving?", desc: "Why a model alone can't answer questions about your company.", tag: ""}
+    - {id: ch1, label: "Ch. 1", title: "RAG: how a question becomes a cited answer", desc: "The whole pipeline, step by step, and where it usually breaks.", tag: ""}
+    - {id: ch2, label: "Ch. 2", title: "Model adaptation: prompt, RAG or fine-tune?", desc: "Which lever to pull, and what each one costs.", tag: ""}
+    - {id: ch3, label: "Ch. 3", title: "Four core mechanisms", desc: "Embeddings, retrieval, serving, and who calls whom in a single query.", tag: "longest"}
+    - {id: ch4, label: "Ch. 4", title: "Agents: when the model decides and acts", desc: "Tools, MCP, and what changes when software takes actions.", tag: ""}
+    - {id: ch5, label: "Ch. 5", title: "Compliance: where does confidential data go?", desc: "Retention, deletion, permissions, and what to ask a vendor.", tag: "read first"}
+    - {id: ch6, label: "Ch. 6", title: "Security: when someone means harm", desc: "Prompt injection and real incidents like EchoLeak.", tag: ""}
+    - {id: ch7, label: "Ch. 7", title: "Beyond RAG: the full landscape", desc: "Where everything else fits once you have the map.", tag: ""}
+    - {id: appendix, label: "Extras", title: "Toolkit overview", desc: "Names you'll hear in meetings, and what each one does.", tag: ""}
+    - {id: cheatsheet, label: "Extras", title: "Quick reference", desc: "The whole book on one page, for a final review.", tag: ""}
+
+  trust:
+    - {big: "49", small: "footnotes to papers and official docs"}
+    - {big: "Free", small: "full text online, no signup"}
+    - {big: "2nd ed.", small: "revised October 2026"}
+    - {big: "Bilingual", small: "written in English and Chinese side by side, not translated"}
+
+  faq_title: "Questions"
+  faq:
+    - {q: "Who is this for?", a: "PMs, presales, founders and managers who sit in AI project meetings and want to follow, and question, what's being said. If you build these systems every day, you'll find it introductory.", open: true}
+    - {q: "Do I need to code?", a: "No. There's no math and no code. Diagrams and plain explanations only.", open: true}
+    - {q: "Is it really free?", a: "Yes, the whole book is free to read here. The PDF and EPUB are paid, for offline reading and to support the work.", open: false}
+    - {q: "Why trust it?", a: "Every specific claim links to a paper, a vendor's documentation or a public advisory, so you can check it yourself.", open: false}
+    - {q: "Why both English and Chinese?", a: "The book was written in both languages at the same time, so neither version is a translation of the other. Pick whichever you read faster.", open: false}
+
+  end_text: "Read it free, or take it with you as PDF + EPUB."
+  contact_label: "Questions or corrections:"
+
+zh:
+  eyebrow: "写给要和 AI 项目打交道的人 · 免费在线读"
+  title: "理解现代 LLM 系统"
+  lede: "RAG、微调、Agent 各自是什么、怎么拼在一起，以及**公司数据接进去之后到底流到了哪里**。写给产品、售前和管理者，不需要数学和编程。"
+  cta_read: "开始阅读"
+  cta_quick: "5 分钟速记版"
+  cta_buy: "PDF + EPUB"
+  meta_line: "在线全文免费，无需注册 · 第二版，2026 年 10 月"
+  who_question: "开会时 RAG、Agent、MCP 满天飞，你只能点头？"
+  who_body: "这是我当初想要却没找到的一张地图：每一块是干什么的、怎么连起来，以及数据交出去之前该问供应商哪些问题。"
+  who_sign: "— koe"
+
+  facts_title: "六件大多数人以为反了的事"
+  facts_sub: "每一条都对应书里的一节，带出处。"
+  facts:
+    - myth: "“他们不拿数据训练，所以没事。”"
+      fact: "“不拿你的数据训练”和“不留存你的数据”是两回事。"
+      why: "OpenAI 的 API 自 2023 年 3 月起默认不训练，但滥用监控日志仍可能保留提示词和回答，最长 **30** 天。"
+      link_label: "读第五章这一节"
+      chapter: ch5
+      anchor: ""
+      source: "出处：OpenAI 数据政策"
+    - myth: "“文档已经删了。”"
+      fact: "在向量数据库里“删除”，往往只是标记了一下。"
+      why: "向量数据库出于性能考虑，默认在元数据层做“软删除”：接口不报错就算删掉了，数据可能还在物理存储里。GDPR 第 17 条要求的是真正删除。"
+      link_label: "读第五章这一节"
+      chapter: ch5
+      anchor: ""
+      source: ""
+    - myth: "“向量只是一串数字，等于脱敏了。”"
+      fact: "短文本可以从向量里还原回来。"
+      why: "2023 年的一项研究里，对一种嵌入模型，32 个 token 的输入有 **92%** 被逐字还原；临床记录测试中 **89%** 的患者全名被还原。"
+      link_label: "读第五章这一节"
+      chapter: ch5
+      anchor: ""
+      source: "出处：Morris 等，EMNLP 2023"
+    - myth: "“每个人只能查到自己有权限的内容。”"
+      fact: "文档一变成向量，权限默认就丢了。"
+      why: "Confluence、SharePoint、内部 wiki 的文档转成向量后，原来的访问控制不会跟着走，除非专门重建。"
+      link_label: "读第五章这一节"
+      chapter: ch5
+      anchor: ""
+      source: ""
+    - myth: "“攻击者得先进得了我们的系统。”"
+      fact: "一封看起来很正常的邮件，就让 Microsoft 365 Copilot 泄露了数据。"
+      why: "EchoLeak 漏洞，编号 CVE-2025-32711，2025 年 6 月公开，微软自评 **9.3** 分（满分 10）。"
+      link_label: "读第六章这一节"
+      chapter: ch6
+      anchor: ""
+      source: "出处：微软安全通告"
+    - myth: "“它记得我们刚才聊过什么。”"
+      fact: "模型本身没有记忆，每一轮都把前面的内容重读一遍。"
+      why: "你能接着追问“那第二种呢”，是因为系统每轮都把对话历史和新问题一起交给模型，模型当场重读一遍。对话越长，每轮要重读的就越多。"
+      link_label: "读第一章这一节"
+      chapter: ch1
+      anchor: ""
+      source: ""
+
+  toc_title: "目录"
+  toc_sub: "每章可以单独读。下周开会聊什么，就先读哪章。"
+  toc:
+    - {id: preface, label: "开始之前", title: "这整套系统到底在解决什么问题？", desc: "为什么光有模型，回答不了你们公司的问题。", tag: ""}
+    - {id: ch1, label: "第一章", title: "RAG：一个问题怎么变成带引用的答案", desc: "整条流程一步步走一遍，以及通常在哪一步出问题。", tag: ""}
+    - {id: ch2, label: "第二章", title: "模型适配：提示词、RAG 还是微调？", desc: "该用哪一招，每一招要付出什么。", tag: ""}
+    - {id: ch3, label: "第三章", title: "四个最核心的技术机制", desc: "向量、检索、模型服务，以及一次查询里谁调用谁。", tag: "最长"}
+    - {id: ch4, label: "第四章", title: "Agent：当模型开始自己决定、自己动手", desc: "工具调用、MCP，以及软件开始“动手”之后什么变了。", tag: ""}
+    - {id: ch5, label: "第五章", title: "合规：机密数据到底会流到哪里去", desc: "留存、删除、权限，以及该问供应商什么。", tag: "推荐先读"}
+    - {id: ch6, label: "第六章", title: "安全：当有人故意使坏", desc: "提示词注入，以及 EchoLeak 这样的真实事件。", tag: ""}
+    - {id: ch7, label: "第七章", title: "跳出 RAG：LLM 系统的全景", desc: "有了地图之后，其他东西放在哪里。", tag: ""}
+    - {id: appendix, label: "附录", title: "工具库概览", desc: "开会时会听到的工具名，各自是干什么的。", tag: ""}
+    - {id: cheatsheet, label: "附录", title: "速记卡片", desc: "全书压缩成一页，用来最后复习。", tag: ""}
+
+  trust:
+    - {big: "49", small: "个脚注，指向论文和官方文档"}
+    - {big: "免费", small: "在线全文，不用注册"}
+    - {big: "第二版", small: "2026 年 10 月修订"}
+    - {big: "中英双写", small: "中文和英文同步写成，不是翻译版"}
+
+  faq_title: "常见问题"
+  faq:
+    - {q: "适合谁读？", a: "要参加 AI 项目会议、想听懂也想能提问的产品、售前、创业者和管理者。每天在写这类系统的工程师会觉得偏入门。", open: true}
+    - {q: "需要会编程吗？", a: "不需要。没有公式，没有代码，只有图和白话解释。", open: true}
+    - {q: "真的免费吗？", a: "是的，全书在这里免费读。PDF 和 EPUB 是付费的，方便离线看，也算支持一下。", open: false}
+    - {q: "凭什么信？", a: "每个具体结论都有出处，指向论文、厂商文档或公开漏洞通告，可以自己去核对。", open: false}
+    - {q: "为什么有中英两版？", a: "这本书是中英文同时写的，两版都不是从另一版翻译过来的。哪个读得快就读哪个。", open: false}
+
+  end_text: "在线免费读，或者带走 PDF + EPUB。"
+  contact_label: "问题或勘误："

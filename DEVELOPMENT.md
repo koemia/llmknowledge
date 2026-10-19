@@ -8,9 +8,10 @@
 .
 ├─ content/
 │   ├─ 理解现代LLM系统_从RAG到全景.md      ← 中文内容源
-│   └─ 理解现代LLM系统_从RAG到全景.en.md   ← 英文内容源（与中文一一对应）
+│   ├─ 理解现代LLM系统_从RAG到全景.en.md   ← 英文内容源（与中文一一对应）
+│   └─ landing.yaml                      ← 入口页（/ 和 /zh/）的全部文案，中英各一套
 ├─ build.py                              ← 生成脚本（读 content，输出 site，中英文各一份）
-├─ requirements.txt                      ← 依赖（markdown）
+├─ requirements.txt                      ← 依赖（markdown、pyyaml）
 ├─ _redirects                            ← Cloudflare Pages 重定向规则，构建时复制进 site/
 ├─ .gitignore                            ← 忽略 site/（由构建生成，不入库）
 ├─ README.md                             ← 英文读者说明
@@ -35,8 +36,9 @@ python build.py
 
 ## URL 结构
 
-- 英文在根路径（`/`、`/ch1`、`/ch3`…）
-- 中文在 `/zh/` 前缀下（`/zh/`、`/zh/ch1`、`/zh/ch3`…）
+- 英文在根路径（`/`、`/preface`、`/ch1`…）
+- 中文在 `/zh/` 前缀下（`/zh/`、`/zh/preface`、`/zh/ch1`…）
+- `/` 和 `/zh/` 是入口页（不用侧栏），版式在 `build.py` 的 `LANDING_TEMPLATE`，文案只改 `content/landing.yaml`；前言在 `/preface`
 - 每页 `<head>` 里带 `hreflang` 互链标注（`x-default` 指向英文根路径），方便搜索引擎识别中英文对应关系
 - 旧版英文在 `/en/` 前缀下，`_redirects` 里有一条 `/en/* → /:splat` 把旧链接跳到新位置；旧版中文根路径（`/`、`/ch1`…）**无法**重定向到 `/zh/`——这些路径现在被新的英文页面复用，_redirects 的匹配发生在静态文件之前，写规则会连新英文页面一起跳走。访问这些旧中文书签的人会直接看到对应的英文页
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re, markdown, html, os, shutil
+import yaml
 from datetime import date
 
 BASE_URL = "https://llmknowledge.org"
@@ -76,7 +77,7 @@ DESCRIPTIONS = {
 }
 
 # ===== SEO：每页 <title> 与 meta description =====
-# title 写成搜索词会命中的说法（章名 + 关键词），后缀统一挂书名短称；首页单独写。
+# title 写成搜索词会命中的说法（章名 + 关键词），后缀统一挂书名短称；首页（入口页 home）单独写、不加后缀。
 # description 控制在英文 ~150 字符、中文 ~80 字以内，超出部分搜索结果会截断。
 TITLE_SUFFIX = {
     "en": " | LLM Systems Field Guide",
@@ -85,7 +86,8 @@ TITLE_SUFFIX = {
 
 PAGE_TITLES = {
     "en": {
-        "preface": "Understanding Modern LLM Systems: A Free Field Guide to RAG, Agents, and Beyond",
+        "home": "Understanding Modern LLM Systems: A Free Field Guide to RAG, Agents, and Beyond",
+        "preface": "Before We Begin: What Problem Is This Whole System Actually Solving?",
         "ch1": "How RAG Works: The 8-Step Pipeline, Explained",
         "ch2": "Fine-Tuning vs. RAG: What Each One Actually Fixes",
         "ch3": "Embeddings, Vector Search & LLM Serving Explained",
@@ -97,7 +99,8 @@ PAGE_TITLES = {
         "cheatsheet": "LLM Systems Cheat Sheet: Core Concepts on One Page",
     },
     "zh": {
-        "preface": "理解现代大语言模型系统：从 RAG 到 Agent 的概念地图（免费在线阅读）",
+        "home": "理解现代大语言模型系统：从 RAG 到 Agent 的概念地图（免费在线阅读）",
+        "preface": "开始之前：这整套系统到底在解决什么问题？",
         "ch1": "RAG 原理：一个问题怎么变成带引用的答案（八步流程）",
         "ch2": "微调还是 RAG？模型适配的三种手段各解决什么问题",
         "ch3": "Embedding、向量检索、KV Cache：大模型系统的四个核心机制",
@@ -112,8 +115,10 @@ PAGE_TITLES = {
 
 META_DESCRIPTIONS = {
     "en": {
-        "preface": ("A free, book-length guide to how modern LLM systems work — RAG, fine-tuning, "
-                    "agents, compliance, and security. No math or coding background needed."),
+        "home": ("A free, book-length guide to how modern LLM systems work — RAG, fine-tuning, "
+                 "agents, compliance, and security. No math or coding background needed."),
+        "preface": ("Why a general-purpose model can't answer questions about your company's own documents, "
+                    "and how RAG solves it: look up the material first, then answer from it."),
         "ch1": ("The full RAG pipeline in eight steps — from query rewriting and hybrid retrieval "
                 "to guardrails and citations — plus offline indexing and the four feedback loops."),
         "ch2": ("Knowledge gap, behavior gap, comprehension gap: when to use RAG, fine-tuning (SFT, RFT, LoRA), "
@@ -134,7 +139,8 @@ META_DESCRIPTIONS = {
                        "KV cache, agents, compliance, security, and the full landscape."),
     },
     "zh": {
-        "preface": "免费在线阅读的大模型系统入门书：RAG、微调、Agent、合规与安全，写给产品经理、项目经理、售前、创业者和需要对接 AI 项目的管理者，不需要数学或编程基础。",
+        "home": "免费在线阅读的大模型系统入门书：RAG、微调、Agent、合规与安全，写给产品经理、项目经理、售前、创业者和需要对接 AI 项目的管理者，不需要数学或编程基础。",
+        "preface": "通用大模型没学过你们公司的资料，所以要先查资料、再让模型基于资料回答，这就是 RAG（检索增强生成），也是这本书的主线。",
         "ch1": "用八个步骤讲清 RAG 全流程：问题改写、混合检索、重排、组装提示词、生成、护栏、引用、日志，外加离线索引和四个回环。",
         "ch2": "模型不知道、不会说、听不懂：什么时候用 RAG，什么时候用微调（SFT、RFT、LoRA）或继续预训练，以及为什么微调学不会新知识。",
         "ch3": "Embedding 怎么表示语义，向量检索（HNSW、IVF、DiskANN）与混合检索、重排怎么配合，KV Cache、prefill 与 decode、连续批处理怎么工作。",
@@ -150,7 +156,7 @@ META_DESCRIPTIONS = {
 
 def page_title_for(lang_key, sec_id):
     t = PAGE_TITLES[lang_key][sec_id]
-    return t if sec_id == "preface" else t + TITLE_SUFFIX[lang_key]
+    return t if sec_id == "home" else t + TITLE_SUFFIX[lang_key]
 
 
 def head_meta_for(lang_key, cfg, sec_id):
@@ -160,7 +166,7 @@ def head_meta_for(lang_key, cfg, sec_id):
     locale = "zh_CN" if lang_key == "zh" else "en_US"
     return "\n".join([
         '<meta name="description" content="%s">' % desc,
-        '<meta property="og:type" content="%s">' % ("website" if sec_id == "preface" else "article"),
+        '<meta property="og:type" content="%s">' % ("website" if sec_id == "home" else "article"),
         '<meta property="og:site_name" content="%s">' % html.escape(cfg["book_title"], quote=True),
         '<meta property="og:title" content="%s">' % title,
         '<meta property="og:description" content="%s">' % desc,
@@ -182,6 +188,7 @@ SHORT_LINKS = {
     },
     "zh": {
         "sidebar": "https://ymjr.de/llmbook-zh-sidebar",
+        "home": "https://ymjr.de/llmbook-zh-home",
         "ch7": "https://ymjr.de/llmbook-zh-ch7",
         "appendix": "https://ymjr.de/llmbook-zh-appendix",
         "cheatsheet": "https://ymjr.de/llmbook-zh-cheat",
@@ -237,22 +244,22 @@ def endnote_html(lang_key, sec_id):
 
 
 def fname(sec_id):
-    return "index.html" if sec_id == "preface" else sec_id + ".html"
+    return "index.html" if sec_id == "home" else sec_id + ".html"
 
 
 def slug(sec_id):
     """对外 URL 不带 .html：Cloudflare Pages 会把 /chN.html 308 到 /chN，
     链接直接写无后缀形式，省掉爬虫一次重定向。磁盘文件名仍由 fname() 决定。"""
-    return "" if sec_id == "preface" else sec_id
+    return "" if sec_id == "home" else sec_id
 
 
 def rel_href(prefix, sec_id):
-    """页面内相对链接；首页落到目录本身（./ 或 ../ 或 zh/）。"""
+    """页面内相对链接；入口页落到目录本身（./ 或 ../ 或 zh/）。"""
     return (prefix + slug(sec_id)) or "./"
 
 
 def url_for(cfg, sec_id):
-    """首页用干净的 / 或 /zh/，其余页面用 /chN（无 .html 后缀）。"""
+    """入口页用干净的 / 或 /zh/，其余页面用 /preface、/chN（无 .html 后缀）。"""
     return BASE_URL + cfg["url_prefix"] + slug(sec_id)
 
 
@@ -297,21 +304,8 @@ def classify_structural(sections):
         s["nav"] = nav
 
 
-TEMPLATE = r'''<!DOCTYPE html>
-<html lang="__LANG__">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="google-site-verification" content="N-Eq_2c5aG0rHDGOkAvz7jPIxSpWsmKo1mIh6O4yZ1U">
-<title>__PAGE_TITLE__</title>
-__HEAD_META__
-__CANONICAL__
-__HREFLANG__
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
-<style>
-:root{
+# 配色、字体等 CSS 变量：章节页和入口页共用
+ROOT_CSS = r''':root{
   --paper:#201E1A;          /* 页面外底色·深炭（内容之外） */
   --column:#F5EFE4;         /* 阅读栏·浮起的奶油纸 */
   --ink:#2A2924;            /* 暖炭黑·侧栏与标题 */
@@ -330,7 +324,31 @@ __HREFLANG__
   --mono:"SF Mono",ui-monospace,"JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
   --col-w:720px;
   --side-w:300px;
-}
+}'''
+
+
+# 统计脚本：章节页和入口页共用
+ANALYTICS_HTML = r'''<script defer src="https://cloud.umami.is/script.js" data-website-id="398cb9ae-aed6-4239-a477-6c3ec00120a0"></script>
+<!-- Cloudflare Web Analytics -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "1c605389c0f74b35815e02350867239b"}'></script>
+<!-- End Cloudflare Web Analytics -->'''
+
+
+TEMPLATE = r'''<!DOCTYPE html>
+<html lang="__LANG__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google-site-verification" content="N-Eq_2c5aG0rHDGOkAvz7jPIxSpWsmKo1mIh6O4yZ1U">
+<title>__PAGE_TITLE__</title>
+__HEAD_META__
+__CANONICAL__
+__HREFLANG__
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+__ROOT_CSS__
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
@@ -356,6 +374,7 @@ a:hover{color:var(--accent-ink)}
   text-transform:uppercase;color:#A89F8C;font-weight:600;margin-bottom:12px}
 .brand h1{margin:0;font-weight:700;font-size:23px;line-height:1.3;color:#F5F0E4;
   letter-spacing:.01em}
+.brand h1 a{color:inherit}
 .brand h1::after{content:"";display:block;width:46px;height:2px;
   background:var(--accent);margin-top:13px;border-radius:2px}
 .brand .sub{font-family:var(--serif);font-style:italic;font-size:15px;
@@ -541,10 +560,7 @@ a:hover{color:var(--accent-ink)}
   .sidebar{transition:none}
 }
 </style>
-<script defer src="https://cloud.umami.is/script.js" data-website-id="398cb9ae-aed6-4239-a477-6c3ec00120a0"></script>
-<!-- Cloudflare Web Analytics -->
-<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "1c605389c0f74b35815e02350867239b"}'></script>
-<!-- End Cloudflare Web Analytics -->
+__ANALYTICS__
 </head>
 <body>
 <div id="progress"></div>
@@ -552,7 +568,7 @@ a:hover{color:var(--accent-ink)}
 <aside class="sidebar" id="sidebar">
   <div class="brand">
     <div class="kicker">A Field Guide</div>
-    <h1>__BOOK_TITLE__</h1>
+    <h1><a href="./">__BOOK_TITLE__</a></h1>
     <div class="sub">__BOOK_SUB__</div>
     __LANG_SWITCH__
   </div>
@@ -685,6 +701,264 @@ def content_for(sections, i, prev_label, next_label, lang_key):
                html.escape(s["title"]), s["html"], extra, pager))
 
 
+# ===== 入口页（/ 和 /zh/）：版式在这里，文案全部在 content/landing.yaml =====
+LANDING_TEMPLATE = r'''<!DOCTYPE html>
+<html lang="__LANG__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google-site-verification" content="N-Eq_2c5aG0rHDGOkAvz7jPIxSpWsmKo1mIh6O4yZ1U">
+<title>__PAGE_TITLE__</title>
+__HEAD_META__
+__CANONICAL__
+__HREFLANG__
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+__ROOT_CSS__
+:root{--strike:#B9AF9C;--sheet-w:1040px;--read-w:760px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--text);font-family:var(--sans);font-size:17px;line-height:1.75;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+a{color:var(--accent-ink)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sheet{max-width:var(--sheet-w);margin:0 auto;background:var(--column);border-radius:4px;overflow:hidden}
+.inner{padding-inline:clamp(20px,5vw,64px)}
+.read{max-width:var(--read-w)}
+
+/* 顶栏 */
+.bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-block:18px;border-bottom:1px solid var(--rule)}
+.brand{font-family:var(--serif);font-weight:600;color:var(--ink);font-size:17px;letter-spacing:.01em;text-decoration:none}
+.brand span{color:var(--muted);font-weight:400}
+.lang{display:flex;border:1px solid var(--rule);border-radius:999px;overflow:hidden}
+.lang a{padding:3px 12px;font-size:13px;color:var(--muted);text-decoration:none}
+.lang a[aria-current="page"]{background:var(--ink);color:var(--column)}
+
+/* 首屏：单栏，从上往下 */
+.hero{padding-block:clamp(36px,7vw,72px) clamp(28px,5vw,48px)}
+.hero .read{display:flex;flex-direction:column}
+.eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);font-weight:600;margin:0 0 14px}
+h1{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:clamp(34px,5.4vw,56px);line-height:1.12;margin:0 0 18px;text-wrap:balance;letter-spacing:-.01em}
+.lang-zh h1{font-family:var(--sans);font-weight:700;letter-spacing:0;line-height:1.25}
+.lede{font-size:clamp(17px,2vw,19px);color:var(--text);margin:0 0 26px;max-width:34em}
+.lede strong{color:var(--ink)}
+.ctas{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:11px 18px;border-radius:3px;font-size:15px;font-weight:600;text-decoration:none;border:1px solid var(--ink-line);color:var(--ink);background:transparent}
+.btn.primary{background:var(--accent-ink);border-color:var(--accent-ink);color:var(--column)}
+.meta{margin:12px 0 0;font-size:14px;color:var(--muted)}
+.who{margin-top:32px;border-left:2px solid var(--accent);padding:4px 0 4px 18px;font-size:15.5px;color:var(--text);max-width:36em}
+.who p{margin:0 0 8px}
+.who p:last-child{margin:0}
+.who .q{font-family:var(--serif);font-style:italic;color:var(--ink);font-size:18px}
+.lang-zh .who .q{font-family:var(--sans);font-style:normal;font-weight:600;font-size:17px}
+.who .sign{color:var(--muted);font-size:14px}
+
+/* 事实区：一条一行 */
+.facts{background:var(--tint);border-block:1px solid var(--tint-line);padding-block:clamp(32px,5vw,52px)}
+h2{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:clamp(24px,3vw,30px);line-height:1.25;margin:0 0 6px;text-wrap:balance}
+.lang-zh h2{font-family:var(--sans);font-weight:700}
+.sub{margin:0 0 20px;color:var(--muted);font-size:15px}
+.flist{list-style:none;margin:0;padding:0;border-top:1px solid var(--tint-line)}
+.fitem{padding:24px 0 26px;border-bottom:1px solid var(--tint-line);display:flex;flex-direction:column;gap:8px}
+.fitem .myth{margin:0;font-size:14.5px;color:var(--muted);text-decoration:line-through;text-decoration-color:var(--strike);text-decoration-thickness:1.5px}
+.fitem h3{margin:0;font-size:clamp(19px,2.3vw,22px);line-height:1.45;color:var(--ink);font-weight:700;text-wrap:balance}
+.lang-en .fitem h3{font-family:var(--serif);font-weight:600}
+.fitem .why{margin:0;font-size:14.5px;line-height:1.7;color:var(--text);max-width:40em}
+.fitem .foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:6px}
+.go{display:inline-flex;align-items:center;gap:6px;font-size:14.5px;font-weight:600;color:var(--accent-ink);text-decoration:none;background:var(--column);border:1px solid var(--accent);border-radius:3px;padding:6px 12px}
+.go:hover{background:var(--accent-ink);color:var(--column);border-color:var(--accent-ink)}
+.src{font-size:13px;color:var(--muted)}
+.num{font-family:var(--serif);color:var(--accent-ink);font-weight:600;font-variant-numeric:tabular-nums}
+
+/* 目录：整行是链接，右侧箭头 */
+.toc{padding-block:clamp(32px,5vw,52px)}
+.toc ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule)}
+.toc li{border-bottom:1px solid var(--rule)}
+.toc li a{display:grid;grid-template-columns:5.5em minmax(0,1fr) auto auto;gap:4px 16px;padding:14px 4px;align-items:center;text-decoration:none;color:inherit}
+.toc li a:hover{background:var(--tint)}
+.toc li a:hover .t{color:var(--accent-ink)}
+.toc .no{font-size:13px;color:var(--muted);letter-spacing:.04em}
+.toc .t{color:var(--ink);font-weight:600;font-size:16px;min-width:0}
+.toc .d{display:block;font-weight:400;color:var(--text);font-size:14.5px;margin-top:2px}
+.toc .tag{font-size:12px;color:var(--accent-ink);background:var(--accent-soft);padding:1px 8px;border-radius:999px;white-space:nowrap}
+.toc .tag:empty{background:none;padding:0}
+.toc .arr{color:var(--accent-ink);font-size:20px;line-height:1}
+
+/* 可信度四格 */
+.trust{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;padding-block:28px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.trust-cell{min-width:0}
+.trust-big{display:block;font-family:var(--serif);font-size:26px;color:var(--ink);font-weight:500;line-height:1.2;font-variant-numeric:tabular-nums}
+.lang-zh .trust-big{font-family:var(--sans);font-weight:700;font-size:22px}
+.trust-small{display:block;font-size:13.5px;color:var(--muted);line-height:1.5;margin-top:4px}
+
+/* 常见问题 */
+.faq{padding-block:clamp(32px,5vw,48px)}
+.faq h2{margin-bottom:12px}
+.faq details{border-bottom:1px solid var(--rule);padding:14px 0}
+.faq details:first-of-type{border-top:1px solid var(--rule)}
+.faq summary{cursor:pointer;color:var(--ink);font-weight:600;font-size:16px}
+.faq details p{margin:8px 0 0;font-size:15px}
+
+/* 页脚深色条 */
+.end{background:var(--ink);color:#D9D1C1;padding-block:32px;display:flex;flex-wrap:wrap;gap:16px 32px;justify-content:space-between;align-items:center}
+.end p{margin:0;font-size:15px}
+.end .btn{color:var(--column);border-color:#6D6A5E}
+.end .btn.primary{background:var(--accent);border-color:var(--accent)}
+.mail{font-size:13px;color:#A69F90;width:100%}
+.mail code{font-family:inherit;color:#E9E2D4;user-select:all}
+
+@media (max-width:820px){
+  .trust{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:540px){
+  body{padding-block:10px 24px;font-size:16px}
+  .toc li a{grid-template-columns:minmax(0,1fr) auto}
+  .toc .no{grid-column:1/-1}
+  .toc .tag{display:none}
+  .btn{flex:1 1 100%;justify-content:center}
+}
+</style>
+__ANALYTICS__
+</head>
+<body class="landing lang-__LANG_KEY__">
+<main class="sheet">
+__CONTENT__
+</main>
+</body>
+</html>'''
+
+
+def load_landing():
+    return yaml.safe_load(open("content/landing.yaml", encoding="utf-8"))
+
+
+def inline_md(text):
+    """landing.yaml 的文本字段：只用到行内 **粗体** 和 [链接](url)，渲染后去掉外层 <p>。
+    渲染结果不是单个段落时（比如文字以「1. 」开头被当成列表），退回纯文本。"""
+    text = "" if text is None else str(text)
+    out = markdown.markdown(text).strip()
+    if out.startswith("<p>") and out.endswith("</p>") and out.count("<p>") == 1:
+        return out[3:-4]
+    return html.escape(text)
+
+
+def umami(event, position):
+    return 'data-umami-event="%s" data-umami-event-position="%s"' % (event, position)
+
+
+def landing_content(lang_key, t):
+    links = LANGS[lang_key]["links"]
+    read_href = rel_href("", "preface")
+    buy_href = SHORT_LINKS[lang_key]["home"]
+    lk = lang_key
+    p = []
+
+    switch = []
+    for target in ["en", "zh"]:
+        current = ' aria-current="page"' if target == lang_key else ""
+        switch.append('<a href="%s"%s>%s</a>' % (rel_href(links[target], "home"), current,
+                                                 LANGS[target]["switch_label"]))
+    p.append('<div class="inner bar">\n'
+             '  <a class="brand" href="./">llmknowledge<span>.org</span></a>\n'
+             '  <div class="lang" role="group" aria-label="Language">%s</div>\n'
+             '</div>' % "".join(switch))
+
+    p.append('<section class="inner hero"><div class="read">\n'
+             '  <p class="eyebrow">%s</p>\n'
+             '  <h1>%s</h1>\n'
+             '  <p class="lede">%s</p>\n'
+             '  <div class="ctas">\n'
+             '    <a class="btn primary" href="%s" %s>%s →</a>\n'
+             '    <a class="btn" href="%s" %s>%s</a>\n'
+             '    <a class="btn" href="%s" %s>%s</a>\n'
+             '  </div>\n'
+             '  <p class="meta">%s</p>\n'
+             '  <div class="who">\n'
+             '    <p class="q">%s</p>\n    <p>%s</p>\n    <p class="sign">%s</p>\n'
+             '  </div>\n'
+             '</div></section>'
+             % (inline_md(t["eyebrow"]), inline_md(t["title"]), inline_md(t["lede"]),
+                read_href, umami("landing-cta", "hero-read-" + lk), inline_md(t["cta_read"]),
+                rel_href("", "cheatsheet"), umami("landing-cta", "hero-quick-" + lk), inline_md(t["cta_quick"]),
+                buy_href, umami("landing-cta", "hero-buy-" + lk), inline_md(t["cta_buy"]),
+                inline_md(t["meta_line"]),
+                inline_md(t["who_question"]), inline_md(t["who_body"]), inline_md(t["who_sign"])))
+
+    items = []
+    for n, f in enumerate(t["facts"], 1):
+        href = rel_href("", f["chapter"]) + ("#" + f["anchor"] if f.get("anchor") else "")
+        why = inline_md(f["why"]).replace("<strong>", '<strong class="num">')
+        src = '<span class="src">%s</span>' % inline_md(f["source"]) if f.get("source") else ""
+        items.append('  <li class="fitem">\n'
+                     '    <p class="myth">%s</p>\n'
+                     '    <h3>%s</h3>\n'
+                     '    <p class="why">%s</p>\n'
+                     '    <div class="foot"><a class="go" href="%s" %s>%s →</a>%s</div>\n'
+                     '  </li>'
+                     % (inline_md(f["myth"]), inline_md(f["fact"]), why, href,
+                        umami("landing-fact", "%s-%d-%s" % (f["chapter"], n, lk)),
+                        inline_md(f["link_label"]), src))
+    p.append('<section class="facts"><div class="inner"><div class="read">\n'
+             '  <h2>%s</h2>\n  <p class="sub">%s</p>\n'
+             '  <ol class="flist">\n%s\n  </ol>\n'
+             '</div></div></section>'
+             % (inline_md(t["facts_title"]), inline_md(t["facts_sub"]), "\n".join(items)))
+
+    rows = []
+    for e in t["toc"]:
+        rows.append('  <li><a href="%s" %s><span class="no">%s</span>'
+                    '<span class="t">%s<span class="d">%s</span></span>'
+                    '<span class="tag">%s</span><span class="arr" aria-hidden="true">›</span></a></li>'
+                    % (rel_href("", e["id"]), umami("landing-toc", "%s-%s" % (e["id"], lk)),
+                       inline_md(e["label"]), inline_md(e["title"]), inline_md(e["desc"]),
+                       inline_md(e.get("tag"))))
+    p.append('<section class="inner toc" id="toc"><div class="read">\n'
+             '  <h2>%s</h2>\n  <p class="sub">%s</p>\n'
+             '  <ol>\n%s\n  </ol>\n'
+             '</div></section>'
+             % (inline_md(t["toc_title"]), inline_md(t["toc_sub"]), "\n".join(rows)))
+
+    cells = ['  <div class="trust-cell"><span class="trust-big">%s</span><span class="trust-small">%s</span></div>'
+             % (inline_md(c["big"]), inline_md(c["small"])) for c in t["trust"]]
+    p.append('<section class="inner"><div class="trust">\n%s\n</div></section>' % "\n".join(cells))
+
+    qs = ['  <details%s><summary>%s</summary><p>%s</p></details>'
+          % (" open" if q.get("open") else "", inline_md(q["q"]), inline_md(q["a"])) for q in t["faq"]]
+    p.append('<section class="inner faq"><div class="read">\n  <h2>%s</h2>\n%s\n</div></section>'
+             % (inline_md(t["faq_title"]), "\n".join(qs)))
+
+    p.append('<footer class="inner end">\n'
+             '  <p>%s</p>\n'
+             '  <div class="ctas">\n'
+             '    <a class="btn primary" href="%s" %s>%s →</a>\n'
+             '    <a class="btn" href="%s" %s>%s</a>\n'
+             '  </div>\n'
+             '  <p class="mail">%s <code>%s</code></p>\n'
+             '</footer>'
+             % (inline_md(t["end_text"]),
+                read_href, umami("landing-cta", "end-read-" + lk), inline_md(t["cta_read"]),
+                buy_href, umami("landing-cta", "end-buy-" + lk), inline_md(t["cta_buy"]),
+                inline_md(t["contact_label"]), CONTACT_EMAIL))
+    return "\n\n".join(p)
+
+
+def build_landing(lang_key, landing):
+    cfg = LANGS[lang_key]
+    out = (LANDING_TEMPLATE
+           .replace("__ROOT_CSS__", ROOT_CSS)
+           .replace("__ANALYTICS__", ANALYTICS_HTML)
+           .replace("__LANG_KEY__", lang_key)
+           .replace("__LANG__", cfg["lang_code"])
+           .replace("__PAGE_TITLE__", html.escape(page_title_for(lang_key, "home")))
+           .replace("__HEAD_META__", head_meta_for(lang_key, cfg, "home"))
+           .replace("__CANONICAL__", '<link rel="canonical" href="%s">' % url_for(cfg, "home"))
+           .replace("__HREFLANG__", hreflang_tags("home"))
+           .replace("__CONTENT__", landing_content(lang_key, landing[lang_key])))
+    open(os.path.join(cfg["outdir"], fname("home")), "w", encoding="utf-8").write(out)
+
+
 def build_lang(lang_key):
     cfg = LANGS[lang_key]
     sections = parse_sections(cfg["src"])
@@ -714,6 +988,8 @@ def build_lang(lang_key):
 
     for i, s in enumerate(sections):
         out = (TEMPLATE
+               .replace("__ROOT_CSS__", ROOT_CSS)
+               .replace("__ANALYTICS__", ANALYTICS_HTML)
                .replace("__LANG__", cfg["lang_code"])
                .replace("__PAGE_TITLE__", html.escape(page_title_for(lang_key, s["id"])))
                .replace("__HEAD_META__", head_meta_for(lang_key, cfg, s["id"]))
@@ -740,7 +1016,8 @@ def build_lang(lang_key):
 
 def write_sitemap(sections_by_lang):
     today = date.today().isoformat()
-    ids = [s["id"] for s in sections_by_lang["en"]]  # 各语言章节一一对应，用英文版的顺序即可
+    # 入口页在最前；各语言章节一一对应，用英文版的顺序即可
+    ids = ["home"] + [s["id"] for s in sections_by_lang["en"]]
     blocks = []
     for sec_id in ids:
         for cfg in LANGS.values():
@@ -812,11 +1089,13 @@ if os.path.isfile("_redirects"):
 
 total = 0
 sections_by_lang = {}
+landing = load_landing()
 for lang_key in LANGS:
     sections = build_lang(lang_key)
+    build_landing(lang_key, landing)
     sections_by_lang[lang_key] = sections
-    total += len(sections)
-    print("built %d pages -> %s/" % (len(sections), LANGS[lang_key]["outdir"]))
+    total += len(sections) + 1
+    print("built %d pages + landing -> %s/" % (len(sections), LANGS[lang_key]["outdir"]))
 
 write_sitemap(sections_by_lang)
 write_robots()
