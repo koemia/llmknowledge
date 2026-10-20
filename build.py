@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import re, markdown, html, os, shutil
+import re, markdown, html, os, shutil, json
 import yaml
 from datetime import date
 
@@ -172,8 +172,20 @@ def head_meta_for(lang_key, cfg, sec_id):
         '<meta property="og:description" content="%s">' % desc,
         '<meta property="og:url" content="%s">' % url,
         '<meta property="og:locale" content="%s">' % locale,
-        '<meta name="twitter:card" content="summary">',
+        '<meta property="og:image" content="%s">' % og_image_url(lang_key),
+        '<meta property="og:image:width" content="1200">',
+        '<meta property="og:image:height" content="630">',
+        '<meta property="og:image:alt" content="%s">' % html.escape(cfg["book_title"], quote=True),
+        '<meta name="twitter:card" content="summary_large_image">',
     ])
+
+
+# 社交分享图（1200×630，由封面生成）：content/social/ 构建时原样复制到 site/social/
+SOCIAL_DIR = "content/social"
+
+
+def og_image_url(lang_key):
+    return "%s/social/og-%s.jpg" % (BASE_URL, lang_key)
 
 
 # 付费出站短链：每个入口位置一条固定短链，UTM/最终跳转目标在短链服务那端配置，
@@ -731,6 +743,7 @@ LANDING_TEMPLATE = r'''<!DOCTYPE html>
 __HEAD_META__
 __CANONICAL__
 __HREFLANG__
+__JSONLD__
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 __FONTS_LINK__
@@ -800,6 +813,8 @@ h2{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:clamp(24p
 .go{display:inline-flex;align-items:center;gap:6px;font-size:14.5px;font-weight:600;color:var(--accent-ink);text-decoration:none;background:var(--column);border:1px solid var(--accent);border-radius:3px;padding:6px 12px}
 .go:hover{background:var(--accent-ink);color:var(--column);border-color:var(--accent-ink)}
 .src{font-size:13px;color:var(--muted)}
+.src a{color:inherit;text-decoration:underline;text-decoration-color:var(--tint-line);text-underline-offset:3px}
+.src a:hover{color:var(--accent-ink);text-decoration-color:var(--accent)}
 .num{font-family:var(--serif);color:var(--accent-ink);font-weight:600;font-variant-numeric:tabular-nums}
 
 /* 目录：整行是链接，右侧箭头 */
@@ -979,7 +994,52 @@ def landing_content(lang_key, t):
     return "\n\n".join(p)
 
 
-def build_landing(lang_key, landing):
+# 结构化数据里的书名以封面 / 文件扉页为准（与 IngramSpark 一致），站内书名作 alternateName
+BOOK_NAMES = {
+    "en": "Understanding Modern LLM Systems: A Field Guide to RAG, Agents, and Beyond",
+    "zh": "理解现代LLM系统：从RAG到全景",
+}
+EDITION = {"number": "2", "date": "2026-10"}
+
+
+def plain_text(md_text):
+    return html.unescape(re.sub(r"<[^>]+>", "", inline_md(md_text)))
+
+
+def landing_jsonld(lang_key, t, sections):
+    """入口页的 schema.org 数据：Book（含各章链接）+ FAQPage。不写价格（见 decisions 10/19）。"""
+    cfg = LANGS[lang_key]
+    home = url_for(cfg, "home")
+    book = {
+        "@type": "Book",
+        "@id": home + "#book",
+        "name": BOOK_NAMES[lang_key],
+        "alternateName": cfg["book_title"],
+        "description": META_DESCRIPTIONS[lang_key]["home"],
+        "url": home,
+        "image": og_image_url(lang_key),
+        "author": {"@type": "Person", "name": "koe"},
+        "inLanguage": cfg["lang_code"],
+        "bookEdition": EDITION["number"],
+        "dateModified": EDITION["date"],
+        "isAccessibleForFree": True,
+        "license": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
+        "hasPart": [{"@type": "Chapter", "position": i + 1, "name": s["title"],
+                     "url": url_for(cfg, s["id"])} for i, s in enumerate(sections)],
+    }
+    faq = {
+        "@type": "FAQPage",
+        "@id": home + "#faq",
+        "mainEntity": [{"@type": "Question", "name": plain_text(q["q"]),
+                        "acceptedAnswer": {"@type": "Answer", "text": plain_text(q["a"])}}
+                       for q in t["faq"]],
+    }
+    data = json.dumps({"@context": "https://schema.org", "@graph": [book, faq]},
+                      ensure_ascii=False, indent=1)
+    return '<script type="application/ld+json">\n%s\n</script>' % data.replace("</", "<\\/")
+
+
+def build_landing(lang_key, landing, sections):
     cfg = LANGS[lang_key]
     out = (LANDING_TEMPLATE
            .replace("__ROOT_CSS__", ROOT_CSS)
@@ -991,6 +1051,7 @@ def build_landing(lang_key, landing):
            .replace("__HEAD_META__", head_meta_for(lang_key, cfg, "home"))
            .replace("__CANONICAL__", '<link rel="canonical" href="%s">' % url_for(cfg, "home"))
            .replace("__HREFLANG__", hreflang_tags("home"))
+           .replace("__JSONLD__", landing_jsonld(lang_key, landing[lang_key], sections))
            .replace("__CONTENT__", landing_content(lang_key, landing[lang_key])))
     open(os.path.join(cfg["outdir"], fname("home")), "w", encoding="utf-8").write(out)
 
@@ -1123,13 +1184,15 @@ os.makedirs("site")
 
 if os.path.isfile("_redirects"):
     shutil.copy("_redirects", os.path.join("site", "_redirects"))
+if os.path.isdir(SOCIAL_DIR):
+    shutil.copytree(SOCIAL_DIR, os.path.join("site", "social"))
 
 total = 0
 sections_by_lang = {}
 landing = load_landing()
 for lang_key in LANGS:
     sections = build_lang(lang_key)
-    build_landing(lang_key, landing)
+    build_landing(lang_key, landing, sections)
     sections_by_lang[lang_key] = sections
     total += len(sections) + 1
     print("built %d pages + landing -> %s/" % (len(sections), LANGS[lang_key]["outdir"]))

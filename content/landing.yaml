@@ -20,7 +20,7 @@ en:
       link_label: "Chapter 5 · Compliance"
       chapter: ch5
       anchor: ""
-      source: "Source: OpenAI data policy"
+      source: "Source: [OpenAI data policy](https://developers.openai.com/api/docs/guides/your-data)"
     - myth: "We deleted the document."
       emoji: "🤨"
       fact: "Deleting from a vector database often doesn't delete anything yet."
@@ -36,7 +36,7 @@ en:
       link_label: "Chapter 5 · Compliance"
       chapter: ch5
       anchor: ""
-      source: "Source: Morris et al., EMNLP 2023"
+      source: "Source: [Morris et al., EMNLP 2023](https://arxiv.org/abs/2310.06816)"
     - myth: "It only sees what each user can see."
       emoji: "🚫"
       fact: "Permissions are lost by default when documents become vectors."
@@ -52,7 +52,7 @@ en:
       link_label: "Chapter 6 · Security"
       chapter: ch6
       anchor: ""
-      source: "Source: Microsoft advisory"
+      source: "Source: [Microsoft advisory](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711)"
     - myth: "The chatbot remembers our conversation."
       emoji: "🤔"
       fact: "The model has no memory. It rereads everything on every turn."
@@ -114,7 +114,7 @@ zh:
       link_label: "第五章 · 合规视角"
       chapter: ch5
       anchor: ""
-      source: "出处：OpenAI 数据政策"
+      source: "出处：[OpenAI 数据政策](https://developers.openai.com/api/docs/guides/your-data)"
     - myth: "文档已经删了。"
       emoji: "🤨"
       fact: "在向量数据库里“删除”，往往只是标记了一下。"
@@ -130,7 +130,7 @@ zh:
       link_label: "第五章 · 合规视角"
       chapter: ch5
       anchor: ""
-      source: "出处：Morris 等，EMNLP 2023"
+      source: "出处：[Morris 等，EMNLP 2023](https://arxiv.org/abs/2310.06816)"
     - myth: "每个人只能查到自己有权限的内容。"
       emoji: "🚫"
       fact: "文档一变成向量，权限默认就丢了。"
@@ -146,7 +146,7 @@ zh:
       link_label: "第六章 · 安全视角"
       chapter: ch6
       anchor: ""
-      source: "出处：微软安全通告"
+      source: "出处：[微软安全通告](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711)"
     - myth: "它记得我们刚才聊过什么。"
       emoji: "🤔"
       fact: "模型本身没有记忆，每一轮都把前面的内容重读一遍。"
