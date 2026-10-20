@@ -1,57 +1,63 @@
 en:
   eyebrow: "A free guide for people who work alongside AI projects"
   title: "Understanding Modern LLM Systems"
-  lede: "How RAG, fine-tuning and agents fit together, and **where your company's data actually goes** once it touches one. Written for PMs, presales and managers. No math, no code."
+  lede: "It starts with RAG, the most widely used approach, works from the surface inward, then expands to agents, compliance and security, giving you a complete concept map of AI applications, including where your company's data actually goes once it's plugged in. No code or math anywhere."
   cta_read: "Start reading"
   cta_quick: "5-minute version"
   cta_buy: "PDF + EPUB"
   meta_line: "Free online, no signup · 2nd edition, October 2026"
-  who_question: "Ever sat in a meeting where RAG, agents and MCP flew past you?"
-  who_body: "This is the map I wish I'd had: what each piece does, how they connect, and the questions worth asking a vendor before your data goes in."
+  who_question: "Ever sat in a meeting where RAG, agents, MCP and every other buzzword flew past you, and all you could do was nod?"
+  who_body: "These are the things I wish someone had explained to me: what each piece does, how they connect, and the questions worth asking a vendor before your data goes in."
   who_sign: "— koe"
 
   facts_title: "Six things most people get backwards"
-  facts_sub: "Each one is a section of the book, with sources."
+  facts_sub: "You'll find the full answer to each of these in the book."
   facts:
-    - myth: "\"They don't train on our data, so we're fine.\""
+    - myth: "They don't train on our data, so we're fine."
+      emoji: "🙅"
       fact: "Not training on your data and not keeping your data are two different promises."
       why: "OpenAI's API hasn't trained on customer data by default since March 2023, but abuse-monitoring logs can still hold prompts and responses for up to **30** days."
-      link_label: "Read in Chapter 5"
+      link_label: "Chapter 5 · Compliance"
       chapter: ch5
       anchor: ""
       source: "Source: OpenAI data policy"
-    - myth: "\"We deleted the document.\""
+    - myth: "We deleted the document."
+      emoji: "🤨"
       fact: "Deleting from a vector database often doesn't delete anything yet."
       why: "For performance, vector databases default to soft deletion at the metadata layer. The API reports success, but the data may still physically exist. GDPR Article 17 requires real deletion."
-      link_label: "Read in Chapter 5"
+      link_label: "Chapter 5 · Compliance"
       chapter: ch5
       anchor: ""
       source: ""
-    - myth: "\"Embeddings are just numbers. They're anonymous.\""
+    - myth: "Embeddings are just numbers. They're anonymous."
+      emoji: "🧐"
       fact: "Short text can be rebuilt from its embedding."
       why: "In a 2023 study, **92%** of 32-token inputs were recovered word for word from one embedding model, including **89%** of patient full names in a clinical test."
-      link_label: "Read in Chapter 5"
+      link_label: "Chapter 5 · Compliance"
       chapter: ch5
       anchor: ""
       source: "Source: Morris et al., EMNLP 2023"
-    - myth: "\"It only sees what each user can see.\""
+    - myth: "It only sees what each user can see."
+      emoji: "🚫"
       fact: "Permissions are lost by default when documents become vectors."
       why: "Pages from Confluence, SharePoint or an internal wiki lose their access controls once embedded, unless someone rebuilds them on purpose."
-      link_label: "Read in Chapter 5"
+      link_label: "Chapter 5 · Compliance"
       chapter: ch5
       anchor: ""
       source: ""
-    - myth: "\"An attacker would need access to our systems.\""
+    - myth: "An attacker would need access to our systems."
+      emoji: "⚠️"
       fact: "One ordinary-looking email was enough to make Microsoft 365 Copilot leak data."
       why: "EchoLeak, CVE-2025-32711, disclosed June 2025. Microsoft rated it **9.3** out of 10."
-      link_label: "Read in Chapter 6"
+      link_label: "Chapter 6 · Security"
       chapter: ch6
       anchor: ""
       source: "Source: Microsoft advisory"
-    - myth: "\"The chatbot remembers our conversation.\""
+    - myth: "The chatbot remembers our conversation."
+      emoji: "🤔"
       fact: "The model has no memory. It rereads everything on every turn."
       why: "Follow-ups like \"what about the second one?\" work because the system sends the whole conversation back with each new question, and the model rereads it on the spot. The longer the chat, the more it rereads every turn."
-      link_label: "Read in Chapter 1"
+      link_label: "Chapter 1 · RAG Core Flow"
       chapter: ch1
       anchor: ""
       source: ""
@@ -78,11 +84,11 @@ en:
 
   faq_title: "Questions"
   faq:
-    - {q: "Who is this for?", a: "PMs, presales, founders and managers who sit in AI project meetings and want to follow, and question, what's being said. If you build these systems every day, you'll find it introductory.", open: true}
-    - {q: "Do I need to code?", a: "No. There's no math and no code. Diagrams and plain explanations only.", open: true}
-    - {q: "Is it really free?", a: "Yes, the whole book is free to read here. The PDF and EPUB are paid, for offline reading and to support the work.", open: false}
-    - {q: "Why trust it?", a: "Every specific claim links to a paper, a vendor's documentation or a public advisory, so you can check it yourself.", open: false}
-    - {q: "Why both English and Chinese?", a: "The book was written in both languages at the same time, so neither version is a translation of the other. Pick whichever you read faster.", open: false}
+    - {q: "Who is this book written for?",a: "PMs, presales, founders and managers who sit in AI project meetings and want to follow, and question, what's being said. If you build these systems every day, you'll find it introductory.", open: true}
+    - {q: "I don't code and have no technical background. Do I need to learn anything first?",a: "No. There's no math and no code. Diagrams and plain explanations only.", open: true}
+    - {q: "Is the whole book really free online? What are the PDF and EPUB for?",a: "Yes, the whole book is free to read here. The PDF and EPUB are paid, for offline reading and to support the work.", open: false}
+    - {q: "How do I know the information is accurate?",a: "Every specific claim links to a paper, a vendor's documentation or a public advisory, so you can check it yourself.", open: false}
+    - {q: "Why are there English and Chinese versions? Is one translated from the other?",a: "The book was written in both languages at the same time, so neither version is a translation of the other. Pick whichever you read faster.", open: false}
 
   end_text: "Read it free, or take it with you as PDF + EPUB."
   contact_label: "Questions or corrections:"
@@ -90,57 +96,63 @@ en:
 zh:
   eyebrow: "写给要和 AI 项目打交道的人 · 免费在线读"
   title: "理解现代 LLM 系统"
-  lede: "RAG、微调、Agent 各自是什么、怎么拼在一起，以及**公司数据接进去之后到底流到了哪里**。写给产品、售前和管理者，不需要数学和编程。"
+  lede: "从最主流的 RAG 流程入手，由表及里，再扩展到 Agent、合规与安全，帮你搭起一张完整的 AI 应用概念地图，包括公司数据接进去之后到底流到了哪里。全程不需要代码和数学公式。"
   cta_read: "开始阅读"
   cta_quick: "5 分钟速记版"
   cta_buy: "PDF + EPUB"
   meta_line: "在线全文免费，无需注册 · 第二版，2026 年 10 月"
-  who_question: "开会时 RAG、Agent、MCP 满天飞，你只能点头？"
-  who_body: "这是我当初想要却没找到的一张地图：每一块是干什么的、怎么连起来，以及数据交出去之前该问供应商哪些问题。"
+  who_question: "开会时 RAG、Agent、MCP 各种术语满天飞，你只能点头？"
+  who_body: "这些正是我当初想弄明白、却找不到人讲清楚的事：这些概念的每一块是干什么的，怎么连起来，以及数据交出去之前该问供应商哪些问题。"
   who_sign: "— koe"
 
   facts_title: "六件大多数人以为反了的事"
-  facts_sub: "每一条都对应书里的一节，带出处。"
+  facts_sub: "下面每一条，你都能在书里找到完整的答案。"
   facts:
-    - myth: "“他们不拿数据训练，所以没事。”"
+    - myth: "他们不拿数据训练，所以没事。"
+      emoji: "🙅"
       fact: "“不拿你的数据训练”和“不留存你的数据”是两回事。"
       why: "OpenAI 的 API 自 2023 年 3 月起默认不训练，但滥用监控日志仍可能保留提示词和回答，最长 **30** 天。"
-      link_label: "读第五章这一节"
+      link_label: "第五章 · 合规视角"
       chapter: ch5
       anchor: ""
       source: "出处：OpenAI 数据政策"
-    - myth: "“文档已经删了。”"
+    - myth: "文档已经删了。"
+      emoji: "🤨"
       fact: "在向量数据库里“删除”，往往只是标记了一下。"
       why: "向量数据库出于性能考虑，默认在元数据层做“软删除”：接口不报错就算删掉了，数据可能还在物理存储里。GDPR 第 17 条要求的是真正删除。"
-      link_label: "读第五章这一节"
+      link_label: "第五章 · 合规视角"
       chapter: ch5
       anchor: ""
       source: ""
-    - myth: "“向量只是一串数字，等于脱敏了。”"
+    - myth: "向量只是一串数字，等于脱敏了。"
+      emoji: "🧐"
       fact: "短文本可以从向量里还原回来。"
       why: "2023 年的一项研究里，对一种嵌入模型，32 个 token 的输入有 **92%** 被逐字还原；临床记录测试中 **89%** 的患者全名被还原。"
-      link_label: "读第五章这一节"
+      link_label: "第五章 · 合规视角"
       chapter: ch5
       anchor: ""
       source: "出处：Morris 等，EMNLP 2023"
-    - myth: "“每个人只能查到自己有权限的内容。”"
+    - myth: "每个人只能查到自己有权限的内容。"
+      emoji: "🚫"
       fact: "文档一变成向量，权限默认就丢了。"
       why: "Confluence、SharePoint、内部 wiki 的文档转成向量后，原来的访问控制不会跟着走，除非专门重建。"
-      link_label: "读第五章这一节"
+      link_label: "第五章 · 合规视角"
       chapter: ch5
       anchor: ""
       source: ""
-    - myth: "“攻击者得先进得了我们的系统。”"
+    - myth: "攻击者得先进得了我们的系统。"
+      emoji: "⚠️"
       fact: "一封看起来很正常的邮件，就让 Microsoft 365 Copilot 泄露了数据。"
       why: "EchoLeak 漏洞，编号 CVE-2025-32711，2025 年 6 月公开，微软自评 **9.3** 分（满分 10）。"
-      link_label: "读第六章这一节"
+      link_label: "第六章 · 安全视角"
       chapter: ch6
       anchor: ""
       source: "出处：微软安全通告"
-    - myth: "“它记得我们刚才聊过什么。”"
+    - myth: "它记得我们刚才聊过什么。"
+      emoji: "🤔"
       fact: "模型本身没有记忆，每一轮都把前面的内容重读一遍。"
       why: "你能接着追问“那第二种呢”，是因为系统每轮都把对话历史和新问题一起交给模型，模型当场重读一遍。对话越长，每轮要重读的就越多。"
-      link_label: "读第一章这一节"
+      link_label: "第一章 · RAG 核心流程"
       chapter: ch1
       anchor: ""
       source: ""
@@ -167,11 +179,11 @@ zh:
 
   faq_title: "常见问题"
   faq:
-    - {q: "适合谁读？", a: "要参加 AI 项目会议、想听懂也想能提问的产品、售前、创业者和管理者。每天在写这类系统的工程师会觉得偏入门。", open: true}
-    - {q: "需要会编程吗？", a: "不需要。没有公式，没有代码，只有图和白话解释。", open: true}
-    - {q: "真的免费吗？", a: "是的，全书在这里免费读。PDF 和 EPUB 是付费的，方便离线看，也算支持一下。", open: false}
-    - {q: "凭什么信？", a: "每个具体结论都有出处，指向论文、厂商文档或公开漏洞通告，可以自己去核对。", open: false}
-    - {q: "为什么有中英两版？", a: "这本书是中英文同时写的，两版都不是从另一版翻译过来的。哪个读得快就读哪个。", open: false}
+    - {q: "这本书适合什么样的人读？",a: "要参加 AI 项目会议、想听懂也想能提问的产品、售前、创业者和管理者。每天在写这类系统的工程师会觉得偏入门。", open: true}
+    - {q: "不会编程、也没有技术背景，需要先补什么基础吗？",a: "不需要。没有公式，没有代码，只有图和白话解释。", open: true}
+    - {q: "网页版真的全部免费吗？PDF 和 EPUB 又是什么？",a: "是的，全书在这里免费读。PDF 和 EPUB 是付费的，方便离线看，也算支持一下。", open: false}
+    - {q: "书里的内容准确吗？我怎么核实？",a: "每个具体结论都有出处，指向论文、厂商文档或公开漏洞通告，可以自己去核对。", open: false}
+    - {q: "为什么同时有中文版和英文版？是互相翻译的吗？",a: "这本书是中英文同时写的，两版都不是从另一版翻译过来的。哪个读得快就读哪个。", open: false}
 
   end_text: "在线免费读，或者带走 PDF + EPUB。"
   contact_label: "问题或勘误："

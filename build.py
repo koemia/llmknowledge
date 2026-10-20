@@ -182,6 +182,8 @@ SHORT_LINKS = {
     "en": {
         "sidebar": "https://ymjr.de/llmbook-en-sidebar",
         "home": "https://ymjr.de/llmbook-en-home",
+        "end": "https://ymjr.de/llmbook-en-end",
+        "preface": "https://ymjr.de/llmbook-en-preface",
         "ch7": "https://ymjr.de/llmbook-en-ch7",
         "appendix": "https://ymjr.de/llmbook-en-appendix",
         "cheatsheet": "https://ymjr.de/llmbook-en-cheat",
@@ -189,6 +191,7 @@ SHORT_LINKS = {
     "zh": {
         "sidebar": "https://ymjr.de/llmbook-zh-sidebar",
         "home": "https://ymjr.de/llmbook-zh-home",
+        "end": "https://ymjr.de/llmbook-zh-end",
         "ch7": "https://ymjr.de/llmbook-zh-ch7",
         "appendix": "https://ymjr.de/llmbook-zh-appendix",
         "cheatsheet": "https://ymjr.de/llmbook-zh-cheat",
@@ -717,7 +720,7 @@ __HREFLANG__
 <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
 <style>
 __ROOT_CSS__
-:root{--strike:#B9AF9C;--sheet-w:1040px;--read-w:760px}
+:root{--sheet-w:1040px;--read-w:760px}
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--text);font-family:var(--sans);font-size:17px;line-height:1.75;
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
@@ -762,11 +765,22 @@ h2{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:clamp(24p
 .sub{margin:0 0 20px;color:var(--muted);font-size:15px}
 .flist{list-style:none;margin:0;padding:0;border-top:1px solid var(--tint-line)}
 .fitem{padding:24px 0 26px;border-bottom:1px solid var(--tint-line);display:flex;flex-direction:column;gap:8px}
-.fitem .myth{margin:0;font-size:14.5px;color:var(--muted);text-decoration:line-through;text-decoration-color:var(--strike);text-decoration-thickness:1.5px}
-.fitem h3{margin:0;font-size:clamp(19px,2.3vw,22px);line-height:1.45;color:var(--ink);font-weight:700;text-wrap:balance}
+/* 常见说法：放在对话气泡里，表示是某人的想法；右上角的 emoji 小圆标表示这句不对 */
+.fitem .myth{align-self:flex-start;position:relative;margin:10px 0 8px;padding:6px 14px;
+  background:var(--column);border:1px solid var(--tint-line);border-radius:14px;
+  font-size:clamp(16px,1.9vw,18px);line-height:1.5;color:var(--text)}
+.fitem .myth .mark{position:absolute;top:-13px;right:-13px;width:28px;height:28px;border-radius:50%;
+  background:var(--column);border:1px solid var(--tint-line);font-size:15px;line-height:26px;text-align:center}
+.fitem .myth::after{content:"";position:absolute;left:18px;bottom:-7px;width:12px;height:12px;
+  background:var(--column);border-right:1px solid var(--tint-line);border-bottom:1px solid var(--tint-line);
+  transform:rotate(45deg)}
+/* 事实：前面加 ↳ 表示修正；解释和按钮与事实文字左对齐 */
+.fitem{--fix-indent:28px}
+.fitem h3{position:relative;margin:0;padding-left:var(--fix-indent);font-size:clamp(19px,2.3vw,22px);line-height:1.45;color:var(--ink);font-weight:700;text-wrap:balance}
+.fitem h3::before{content:"↳";position:absolute;left:0;top:0;color:var(--accent);font-weight:600}
 .lang-en .fitem h3{font-family:var(--serif);font-weight:600}
-.fitem .why{margin:0;font-size:14.5px;line-height:1.7;color:var(--text);max-width:40em}
-.fitem .foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:6px}
+.fitem .why{margin:0;padding-left:var(--fix-indent);font-size:13.5px;font-style:italic;line-height:1.7;color:var(--text);max-width:40em}
+.fitem .foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:6px;padding-left:var(--fix-indent)}
 .go{display:inline-flex;align-items:center;gap:6px;font-size:14.5px;font-weight:600;color:var(--accent-ink);text-decoration:none;background:var(--column);border:1px solid var(--accent);border-radius:3px;padding:6px 12px}
 .go:hover{background:var(--accent-ink);color:var(--column);border-color:var(--accent-ink)}
 .src{font-size:13px;color:var(--muted)}
@@ -807,7 +821,8 @@ h2{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:clamp(24p
 .end .btn{color:var(--column);border-color:#6D6A5E}
 .end .btn.primary{background:var(--accent);border-color:var(--accent)}
 .mail{font-size:13px;color:#A69F90;width:100%}
-.mail code{font-family:inherit;color:#E9E2D4;user-select:all}
+.mail a{color:#E9E2D4;text-decoration:underline;text-decoration-color:rgba(233,226,212,.4);text-underline-offset:3px}
+.mail a:hover{text-decoration-color:#E9E2D4}
 
 @media (max-width:820px){
   .trust{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -891,13 +906,15 @@ def landing_content(lang_key, t):
         href = rel_href("", f["chapter"]) + ("#" + f["anchor"] if f.get("anchor") else "")
         why = inline_md(f["why"]).replace("<strong>", '<strong class="num">')
         src = '<span class="src">%s</span>' % inline_md(f["source"]) if f.get("source") else ""
+        mark = ('<span class="mark" aria-hidden="true">%s</span>' % html.escape(str(f["emoji"]))
+                if f.get("emoji") else "")
         items.append('  <li class="fitem">\n'
-                     '    <p class="myth">%s</p>\n'
+                     '    <p class="myth">%s%s</p>\n'
                      '    <h3>%s</h3>\n'
                      '    <p class="why">%s</p>\n'
                      '    <div class="foot"><a class="go" href="%s" %s>%s →</a>%s</div>\n'
                      '  </li>'
-                     % (inline_md(f["myth"]), inline_md(f["fact"]), why, href,
+                     % (inline_md(f["myth"]), mark, inline_md(f["fact"]), why, href,
                         umami("landing-fact", "%s-%d-%s" % (f["chapter"], n, lk)),
                         inline_md(f["link_label"]), src))
     p.append('<section class="facts"><div class="inner"><div class="read">\n'
@@ -935,12 +952,12 @@ def landing_content(lang_key, t):
              '    <a class="btn primary" href="%s" %s>%s →</a>\n'
              '    <a class="btn" href="%s" %s>%s</a>\n'
              '  </div>\n'
-             '  <p class="mail">%s <code>%s</code></p>\n'
+             '  <p class="mail">%s <a href="mailto:%s">%s</a></p>\n'
              '</footer>'
              % (inline_md(t["end_text"]),
                 read_href, umami("landing-cta", "end-read-" + lk), inline_md(t["cta_read"]),
-                buy_href, umami("landing-cta", "end-buy-" + lk), inline_md(t["cta_buy"]),
-                inline_md(t["contact_label"]), CONTACT_EMAIL))
+                SHORT_LINKS[lang_key]["end"], umami("landing-cta", "end-buy-" + lk), inline_md(t["cta_buy"]),
+                inline_md(t["contact_label"]), CONTACT_EMAIL, CONTACT_EMAIL))
     return "\n\n".join(p)
 
 
@@ -973,7 +990,7 @@ def build_lang(lang_key):
             s["html"] += (
                 "<p>Everything here is free to read, and will stay that way. "
                 'If you\'d rather read it off the browser, there\'s a <a href="%s">'
-                "typeset PDF + EPUB edition</a>.</p>" % SHORT_LINKS["en"]["home"]
+                "typeset PDF + EPUB edition</a>.</p>" % SHORT_LINKS["en"]["preface"]
             )
 
     outdir = cfg["outdir"]
