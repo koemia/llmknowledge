@@ -238,9 +238,8 @@ def endnote_html(lang_key, sec_id):
         return (
             '<div class="endnote">\n'
             "  <p>%s</p>\n"
-            "  <p>If you'd rather have it off the browser: 67 English pages / 56 Chinese pages, "
-            "typeset as PDF and EPUB, 7 original diagrams, 49 footnotes to primary sources — "
-            "four files in one download, $9.</p>\n"
+            "  <p>If you'd rather have it off the browser: a typeset PDF and EPUB edition, "
+            "in English and Chinese — four files in one download.</p>\n"
             '  <p><a href="%s">Get the PDF + EPUB on Gumroad →</a></p>\n'
             '  <p class="note-fine">Corrections, feedback, or trouble paying? Write to '
             '<a href="mailto:%s">%s</a>.</p>\n'
@@ -249,8 +248,7 @@ def endnote_html(lang_key, sec_id):
     return (
         '<div class="endnote">\n'
         "  <p>%s</p>\n"
-        "  <p>想把它从浏览器里拿出来：中文 56 页 / 英文 67 页，排版好的 PDF 与 EPUB、"
-        "7 张原创示意图、49 条一手来源脚注——四个文件一次下载，$9 起。"
+        "  <p>想把它从浏览器里拿出来：排版好的 PDF 与 EPUB，中英两版——四个文件一次下载。"
         "付款支持境外银行卡与 PayPal。</p>\n"
         '  <p><a href="%s">在 Gumroad 获取 PDF + EPUB →</a></p>\n'
         '  <p class="note-fine">有勘误、反馈，或者付款上遇到问题，可以写信到 '
@@ -360,7 +358,7 @@ def fonts_link(lang_key):
 
 
 # 统计脚本：章节页和入口页共用
-ANALYTICS_HTML = r'''<script defer src="https://cloud.umami.is/script.js" data-website-id="398cb9ae-aed6-4239-a477-6c3ec00120a0"></script>
+ANALYTICS_HTML = r'''<script defer src="https://cloud.umami.is/script.js" data-website-id="398cb9ae-aed6-4239-a477-6c3ec00120a0" data-domains="llmknowledge.org"></script>
 <!-- Cloudflare Web Analytics -->
 <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "1c605389c0f74b35815e02350867239b"}'></script>
 <!-- End Cloudflare Web Analytics -->'''
