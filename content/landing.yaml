@@ -70,7 +70,7 @@ en:
     - {id: ch2, label: "Ch. 2", title: "Model Adaptation: Prompt, RAG or Fine-Tune?", desc: "Which lever to pull, and what each one costs.", tag: ""}
     - {id: ch3, label: "Ch. 3", title: "Four Core Mechanisms", desc: "Embeddings, retrieval, serving, and who calls whom in a single query.", tag: "Longest"}
     - {id: ch4, label: "Ch. 4", title: "Agents: When the Model Decides and Acts", desc: "Tools, MCP, and what changes when software takes actions.", tag: ""}
-    - {id: ch5, label: "Ch. 5", title: "Compliance: Where Does Confidential Data Go?", desc: "Retention, deletion, permissions, and what to ask a vendor.", tag: "Read first"}
+    - {id: ch5, label: "Ch. 5", title: "Compliance: Where Does Confidential Data Go?", desc: "Retention, deletion, permissions, and what to ask a vendor.", tag: "Recommended"}
     - {id: ch6, label: "Ch. 6", title: "Security: When Someone Means Harm", desc: "Prompt injection and real incidents like EchoLeak.", tag: ""}
     - {id: ch7, label: "Ch. 7", title: "Beyond RAG: The Full Landscape", desc: "Where everything else fits once you have the map.", tag: ""}
     - {id: appendix, label: "Extras", title: "Toolkit Overview", desc: "Names you'll hear in meetings, and what each one does.", tag: ""}
