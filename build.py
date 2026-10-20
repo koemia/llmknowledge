@@ -736,9 +736,9 @@ __HREFLANG__
 __FONTS_LINK__
 <style>
 __ROOT_CSS__
-:root{--sheet-w:1040px;--read-w:760px}
+:root{--sheet-w:1040px;--read-w:760px;--desk:#2F4A3E}  /* --desk：入口页纸面外的底色（深松绿），章节页仍用 --paper */
 *{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--text);font-family:var(--sans);font-size:17px;line-height:1.75;
+body{margin:0;background:var(--desk);color:var(--text);font-family:var(--sans);font-size:17px;line-height:1.75;
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
 a{color:var(--accent-ink)}
@@ -817,7 +817,8 @@ h2{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:clamp(24p
 .toc .arr{color:var(--accent-ink);font-size:20px;line-height:1}
 
 /* 可信度四格 */
-.trust{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;padding-block:28px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.trust-band{background:var(--tint);border-block:1px solid var(--tint-line)}
+.trust{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;padding-block:32px}
 .trust-cell{min-width:0}
 .trust-big{display:block;font-family:var(--serif);font-size:26px;color:var(--ink);font-weight:500;line-height:1.2;font-variant-numeric:tabular-nums}
 .lang-zh .trust-big{font-family:var(--sans);font-weight:700;font-size:22px}
@@ -955,7 +956,8 @@ def landing_content(lang_key, t):
 
     cells = ['  <div class="trust-cell"><span class="trust-big">%s</span><span class="trust-small">%s</span></div>'
              % (inline_md(c["big"]), inline_md(c["small"])) for c in t["trust"]]
-    p.append('<section class="inner"><div class="trust">\n%s\n</div></section>' % "\n".join(cells))
+    p.append('<section class="trust-band"><div class="inner"><div class="trust">\n%s\n</div></div></section>'
+             % "\n".join(cells))
 
     qs = ['  <details%s><summary>%s</summary><p>%s</p></details>'
           % (" open" if q.get("open") else "", inline_md(q["q"]), inline_md(q["a"])) for q in t["faq"]]
