@@ -173,19 +173,20 @@ def head_meta_for(lang_key, cfg, sec_id):
         '<meta property="og:url" content="%s">' % url,
         '<meta property="og:locale" content="%s">' % locale,
         '<meta property="og:image" content="%s">' % og_image_url(lang_key),
-        '<meta property="og:image:width" content="1200">',
-        '<meta property="og:image:height" content="630">',
+        '<meta property="og:image:width" content="2400">',
+        '<meta property="og:image:height" content="1260">',
         '<meta property="og:image:alt" content="%s">' % html.escape(cfg["book_title"], quote=True),
         '<meta name="twitter:card" content="summary_large_image">',
     ])
 
 
-# 社交分享图（1200×630，由封面生成）：content/social/ 构建时原样复制到 site/social/
+# 社交分享图（2400×1260 即 1200×630 的 2 倍，由封面生成，JPEG 高质量不降采样）：content/social/ 构建时原样复制到 site/social/
 SOCIAL_DIR = "content/social"
 
 
 def og_image_url(lang_key):
-    return "%s/social/og-%s.jpg" % (BASE_URL, lang_key)
+    # ?v=N：换图后加 1，让 LinkedIn、X 等平台放弃缓存、重新抓取
+    return "%s/social/og-%s.jpg?v=2" % (BASE_URL, lang_key)
 
 
 # 付费出站短链：每个入口位置一条固定短链，UTM/最终跳转目标在短链服务那端配置，
