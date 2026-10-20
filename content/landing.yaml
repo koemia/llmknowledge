@@ -2,15 +2,15 @@ en:
   eyebrow: "A free guide for people who work alongside AI projects"
   title: "Understanding Modern LLM Systems"
   lede: "It starts with RAG, the most widely used approach, works from the surface inward, then expands to agents, compliance and security, giving you a complete concept map of AI applications, including where your company's data actually goes once it's plugged in. No code or math anywhere."
-  cta_read: "Start reading"
-  cta_quick: "5-minute version"
+  cta_read: "Start Reading"
+  cta_quick: "5-Minute Version"
   cta_buy: "PDF + EPUB"
   meta_line: "Free online, no signup · 2nd edition, October 2026"
-  who_question: "Ever sat in a meeting where RAG, agents, MCP and every other buzzword flew past you, and all you could do was nod?"
-  who_body: "These are the things I wish someone had explained to me: what each piece does, how they connect, and the questions worth asking a vendor before your data goes in."
+  who_question: "Ever sat in a meeting where RAG, agents, MCP and every other buzzword flew past you, and all you could do was smile and nod?"
+  who_body: "These are exactly the things I wanted to understand but couldn't find anyone to explain clearly: what each of these concepts does, how they connect, and the questions worth asking a vendor before your data goes in."
   who_sign: "— koe"
 
-  facts_title: "Six things most people get backwards"
+  facts_title: "Six Things Most People Get Backwards"
   facts_sub: "You'll find the full answer to each of these in the book."
   facts:
     - myth: "They don't train on our data, so we're fine."
@@ -62,25 +62,25 @@ en:
       anchor: ""
       source: ""
 
-  toc_title: "What's inside"
+  toc_title: "What's Inside"
   toc_sub: "Each chapter stands on its own. Start with the one your meeting is about."
   toc:
-    - {id: preface, label: "Start", title: "What problem is this whole system solving?", desc: "Why a model alone can't answer questions about your company.", tag: ""}
-    - {id: ch1, label: "Ch. 1", title: "RAG: how a question becomes a cited answer", desc: "The whole pipeline, step by step, and where it usually breaks.", tag: ""}
-    - {id: ch2, label: "Ch. 2", title: "Model adaptation: prompt, RAG or fine-tune?", desc: "Which lever to pull, and what each one costs.", tag: ""}
-    - {id: ch3, label: "Ch. 3", title: "Four core mechanisms", desc: "Embeddings, retrieval, serving, and who calls whom in a single query.", tag: "longest"}
-    - {id: ch4, label: "Ch. 4", title: "Agents: when the model decides and acts", desc: "Tools, MCP, and what changes when software takes actions.", tag: ""}
-    - {id: ch5, label: "Ch. 5", title: "Compliance: where does confidential data go?", desc: "Retention, deletion, permissions, and what to ask a vendor.", tag: "read first"}
-    - {id: ch6, label: "Ch. 6", title: "Security: when someone means harm", desc: "Prompt injection and real incidents like EchoLeak.", tag: ""}
-    - {id: ch7, label: "Ch. 7", title: "Beyond RAG: the full landscape", desc: "Where everything else fits once you have the map.", tag: ""}
-    - {id: appendix, label: "Extras", title: "Toolkit overview", desc: "Names you'll hear in meetings, and what each one does.", tag: ""}
-    - {id: cheatsheet, label: "Extras", title: "Quick reference", desc: "The whole book on one page, for a final review.", tag: ""}
+    - {id: preface, label: "Start", title: "What Problem Is This Whole System Solving?", desc: "Why a model alone can't answer questions about your company.", tag: ""}
+    - {id: ch1, label: "Ch. 1", title: "RAG: How a Question Becomes a Cited Answer", desc: "The whole pipeline, step by step, and where it usually breaks.", tag: ""}
+    - {id: ch2, label: "Ch. 2", title: "Model Adaptation: Prompt, RAG or Fine-Tune?", desc: "Which lever to pull, and what each one costs.", tag: ""}
+    - {id: ch3, label: "Ch. 3", title: "Four Core Mechanisms", desc: "Embeddings, retrieval, serving, and who calls whom in a single query.", tag: "Longest"}
+    - {id: ch4, label: "Ch. 4", title: "Agents: When the Model Decides and Acts", desc: "Tools, MCP, and what changes when software takes actions.", tag: ""}
+    - {id: ch5, label: "Ch. 5", title: "Compliance: Where Does Confidential Data Go?", desc: "Retention, deletion, permissions, and what to ask a vendor.", tag: "Read first"}
+    - {id: ch6, label: "Ch. 6", title: "Security: When Someone Means Harm", desc: "Prompt injection and real incidents like EchoLeak.", tag: ""}
+    - {id: ch7, label: "Ch. 7", title: "Beyond RAG: The Full Landscape", desc: "Where everything else fits once you have the map.", tag: ""}
+    - {id: appendix, label: "Extras", title: "Toolkit Overview", desc: "Names you'll hear in meetings, and what each one does.", tag: ""}
+    - {id: cheatsheet, label: "Extras", title: "Quick Reference", desc: "The whole book on one page, for a final review.", tag: ""}
 
   trust:
     - {big: "49", small: "footnotes to papers and official docs"}
     - {big: "Free", small: "full text online, no signup"}
-    - {big: "2nd ed.", small: "revised October 2026"}
-    - {big: "Bilingual", small: "written in English and Chinese side by side, not translated"}
+    - {big: "2nd Edition", small: "revised October 2026"}
+    - {big: "Bilingual", small: "full text in English and Chinese"}
 
   faq_title: "Questions"
   faq:
@@ -88,7 +88,6 @@ en:
     - {q: "I don't code and have no technical background. Do I need to learn anything first?",a: "No. There's no math and no code. Diagrams and plain explanations only.", open: true}
     - {q: "Is the whole book really free online? What are the PDF and EPUB for?",a: "Yes, the whole book is free to read here. The PDF and EPUB are paid, for offline reading and to support the work.", open: false}
     - {q: "How do I know the information is accurate?",a: "Every specific claim links to a paper, a vendor's documentation or a public advisory, so you can check it yourself.", open: false}
-    - {q: "Why are there English and Chinese versions? Is one translated from the other?",a: "The book was written in both languages at the same time, so neither version is a translation of the other. Pick whichever you read faster.", open: false}
 
   end_text: "Read it free, or take it with you as PDF + EPUB."
   contact_label: "Questions or corrections:"
@@ -175,7 +174,7 @@ zh:
     - {big: "49", small: "个脚注，指向论文和官方文档"}
     - {big: "免费", small: "在线全文，不用注册"}
     - {big: "第二版", small: "2026 年 10 月修订"}
-    - {big: "中英双写", small: "中文和英文同步写成，不是翻译版"}
+    - {big: "中英双语", small: "中文、英文两版全文"}
 
   faq_title: "常见问题"
   faq:
@@ -183,7 +182,6 @@ zh:
     - {q: "不会编程、也没有技术背景，需要先补什么基础吗？",a: "不需要。没有公式，没有代码，只有图和白话解释。", open: true}
     - {q: "网页版真的全部免费吗？PDF 和 EPUB 又是什么？",a: "是的，全书在这里免费读。PDF 和 EPUB 是付费的，方便离线看，也算支持一下。", open: false}
     - {q: "书里的内容准确吗？我怎么核实？",a: "每个具体结论都有出处，指向论文、厂商文档或公开漏洞通告，可以自己去核对。", open: false}
-    - {q: "为什么同时有中文版和英文版？是互相翻译的吗？",a: "这本书是中英文同时写的，两版都不是从另一版翻译过来的。哪个读得快就读哪个。", open: false}
 
   end_text: "在线免费读，或者带走 PDF + EPUB。"
   contact_label: "问题或勘误："

@@ -327,7 +327,23 @@ ROOT_CSS = r''':root{
   --mono:"SF Mono",ui-monospace,"JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
   --col-w:720px;
   --side-w:300px;
+}
+/* 英文页正文用 Inter（与 PDF 一致），中文字体留在后面兜底 */
+:root:lang(en){
+  --sans:"Inter",-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
 }'''
+
+
+# Google Fonts：两种语言都用 Spectral 做衬线标题；英文页另加 Inter 做正文
+FONT_FAMILIES = {
+    "en": "family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500",
+    "zh": "family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500",
+}
+
+
+def fonts_link(lang_key):
+    return ('<link href="https://fonts.googleapis.com/css2?%s&display=swap" rel="stylesheet">'
+            % FONT_FAMILIES[lang_key])
 
 
 # 统计脚本：章节页和入口页共用
@@ -349,7 +365,7 @@ __CANONICAL__
 __HREFLANG__
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+__FONTS_LINK__
 <style>
 __ROOT_CSS__
 *{box-sizing:border-box}
@@ -717,7 +733,7 @@ __CANONICAL__
 __HREFLANG__
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+__FONTS_LINK__
 <style>
 __ROOT_CSS__
 :root{--sheet-w:1040px;--read-w:760px}
@@ -965,6 +981,7 @@ def build_landing(lang_key, landing):
     cfg = LANGS[lang_key]
     out = (LANDING_TEMPLATE
            .replace("__ROOT_CSS__", ROOT_CSS)
+           .replace("__FONTS_LINK__", fonts_link(lang_key))
            .replace("__ANALYTICS__", ANALYTICS_HTML)
            .replace("__LANG_KEY__", lang_key)
            .replace("__LANG__", cfg["lang_code"])
@@ -1006,6 +1023,7 @@ def build_lang(lang_key):
     for i, s in enumerate(sections):
         out = (TEMPLATE
                .replace("__ROOT_CSS__", ROOT_CSS)
+               .replace("__FONTS_LINK__", fonts_link(lang_key))
                .replace("__ANALYTICS__", ANALYTICS_HTML)
                .replace("__LANG__", cfg["lang_code"])
                .replace("__PAGE_TITLE__", html.escape(page_title_for(lang_key, s["id"])))
