@@ -511,7 +511,7 @@ a:hover{color:var(--accent-ink)}
 .doc sup.footnote-ref{font-size:.75em;font-weight:600}
 .doc sup.footnote-ref a{padding:0 2px}
 .doc .footnote{margin-top:36px;padding-top:20px;border-top:1px solid var(--rule);
-  font-size:14.5px;color:var(--muted)}
+  font-size:14.5px;color:var(--muted);overflow-wrap:anywhere}
 .doc .footnote hr{display:none}
 .doc .footnote ol{padding-left:1.4em}
 .doc .footnote li{margin-bottom:10px;line-height:1.7}
