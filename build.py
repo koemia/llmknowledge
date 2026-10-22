@@ -506,6 +506,42 @@ a:hover{color:var(--accent-ink)}
   vertical-align:top}
 .doc tbody tr:last-child td{border-bottom:0}
 .doc tbody tr:nth-child(even){background:rgba(42,41,36,.02)}
+.doc tbody td:first-child{min-width:5.5em}   /* 第一栏别被挤成一字一行 */
+.doc:lang(zh) tbody td:first-child{min-width:4.5em}
+
+/* 内容长的表：一行一张卡片（由 build.py 的 layout_tables 生成） */
+.row-cards{margin:8px 0 28px}
+.rc{border:1px solid var(--rule);border-radius:6px;padding:16px 20px 6px;margin:0 0 14px;
+  background:rgba(42,41,36,.025)}
+.rc-t{margin:0 0 10px;font-weight:600;color:var(--ink);line-height:1.5}
+.rc-f{margin:0 0 12px}
+.rc-l,.cmp-f .rc-l,.doc .table-wrap td[data-label]::before{display:block;font-family:var(--serif);font-size:12px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);font-weight:600;margin-bottom:2px}
+.doc:lang(zh) .rc-l,.doc:lang(zh) .table-wrap td[data-label]::before{font-family:var(--sans);
+  letter-spacing:.04em;font-size:12.5px}
+/* 对比表（表头第一格空着、两到三栏）：每栏一张卡片并排，窄屏上下排 */
+.compare{display:grid;grid-template-columns:repeat(var(--cmp-n,2),minmax(0,1fr));gap:14px;margin:8px 0 28px}
+.cmp-col{border:1px solid var(--rule);border-radius:6px;padding:16px 18px 6px;background:rgba(42,41,36,.025)}
+.cmp-h{font-weight:600;color:var(--ink);font-size:18px;margin:0 0 12px;padding-bottom:8px;
+  border-bottom:2px solid var(--accent)}
+.cmp-f{margin:0 0 12px;font-size:15.5px;line-height:1.7}
+@media (max-width:640px){
+  .compare{grid-template-columns:minmax(0,1fr)}
+  .cmp-f{font-size:inherit;line-height:inherit}
+}
+/* 其余表格：手机上同样叠成卡片，栏名做小标签 */
+.doc .table-wrap td[data-label]::before{content:none}
+@media (max-width:560px){
+  .doc .table-wrap{border:0;overflow:visible}
+  .doc .table-wrap table,.doc .table-wrap tbody,.doc .table-wrap tr,.doc .table-wrap td{display:block;width:auto}
+  .doc .table-wrap table{font-size:inherit;line-height:inherit;background:none}
+  .doc .table-wrap thead{display:none}
+  .doc .table-wrap tr,.doc .table-wrap tbody tr:nth-child(even){border:1px solid var(--rule);border-radius:6px;
+    padding:14px 16px 4px;margin:0 0 12px;background:rgba(42,41,36,.025)}
+  .doc .table-wrap td{border:0;padding:0;margin:0 0 10px;min-width:0}
+  .doc .table-wrap td:first-child{font-weight:600;color:var(--ink)}
+  .doc .table-wrap td[data-label]:not(:first-child)::before{content:attr(data-label)}
+}
 
 .doc hr{border:0;border-top:1px solid var(--rule);margin:34px 0}
 
@@ -1214,6 +1250,78 @@ def build_landing(lang_key, landing, sections):
     open(os.path.join(cfg["outdir"], fname("home")), "w", encoding="utf-8").write(out)
 
 
+# ===== 表格：内容长的表改成「一行一张卡片」，其余保持表格（手机上叠成卡片） =====
+# 按英文版判断（有单格超过 CARD_TABLE_CHARS 个字符就改卡片）；中文同一章同一位置的表跟着走，
+# 两种语言排法一致。表头第一格空着、两到三栏的是对比表（如「合规 vs 安全」），每栏一张卡片并排。
+# 书稿不动，PDF/EPUB 不受影响。
+CARD_TABLE_CHARS = 250
+
+
+def _cells(row_html):
+    """[(h|d, 属性, 内容)]"""
+    return re.findall(r"<t([hd])([^>]*)>(.*?)</t\1>", row_html, re.S)
+
+
+def _plain(fragment):
+    return html.unescape(re.sub(r"<[^>]+>", "", fragment)).strip()
+
+
+def find_card_tables():
+    cfg = LANGS["en"]
+    sections = parse_sections(cfg["src"])
+    classify_structural(sections)
+    md = markdown.Markdown(extensions=["tables", "fenced_code", "attr_list", "footnotes"])
+    found = set()
+    for s in sections:
+        md.reset()
+        body = md.convert("\n".join(s["body"]).strip())
+        for n, table in enumerate(re.findall(r"<table>(.*?)</table>", body, re.S), 1):
+            tbody = re.search(r"<tbody>(.*?)</tbody>", table, re.S).group(1)
+            if any(len(_plain(c)) > CARD_TABLE_CHARS for _, _, c in _cells(tbody)):
+                found.add((s["id"], n))
+    return found
+
+
+CARD_TABLES = find_card_tables()
+
+
+def layout_tables(section_html, sec_id):
+    count = [0]
+
+    def convert(m):
+        count[0] += 1
+        table = m.group(1)
+        head = [c for _, _, c in _cells(re.search(r"<thead>(.*?)</thead>", table, re.S).group(1))]
+        rows = [_cells(r) for r in re.findall(r"<tr>(.*?)</tr>",
+                                              re.search(r"<tbody>(.*?)</tbody>", table, re.S).group(1), re.S)]
+        if (sec_id, count[0]) in CARD_TABLES:
+            out = ['<div class="row-cards">']
+            for r in rows:
+                out.append('<div class="rc"><div class="rc-t">%s</div>' % r[0][2])
+                out += ['<div class="rc-f"><span class="rc-l">%s</span>%s</div>' % (label, c)
+                        for label, (_, _, c) in zip(head[1:], r[1:])]
+                out.append("</div>")
+            out.append("</div>")
+            return "\n".join(out)
+        if not _plain(head[0]) and 3 <= len(head) <= 4:
+            out = ['<div class="compare" style="--cmp-n:%d">' % (len(head) - 1)]
+            for j in range(1, len(head)):
+                out.append('<div class="cmp-col"><div class="cmp-h">%s</div>' % head[j])
+                out += ['<div class="cmp-f"><span class="rc-l">%s</span>%s</div>' % (r[0][2], r[j][2])
+                        for r in rows]
+                out.append("</div>")
+            out.append("</div>")
+            return "\n".join(out)
+        # 普通表格：每格带上栏名，手机上叠成卡片时显示
+        labels = [html.escape(_plain(h), quote=True) for h in head]
+        body = "\n".join("<tr>%s</tr>" % "".join('<td%s data-label="%s">%s</td>' % (a, labels[i], c)
+                                                  for i, (_, a, c) in enumerate(r)) for r in rows)
+        thead = re.search(r"<thead>.*?</thead>", table, re.S).group(0)
+        return '<div class="table-wrap"><table>%s\n<tbody>\n%s\n</tbody></table></div>' % (thead, body)
+
+    return re.sub(r"<table>(.*?)</table>", convert, section_html, flags=re.S)
+
+
 def build_lang(lang_key):
     cfg = LANGS[lang_key]
     sections = parse_sections(cfg["src"])
@@ -1230,6 +1338,7 @@ def build_lang(lang_key):
                 'If you\'d rather read it off the browser, there\'s a <a href="%s">'
                 "typeset PDF + EPUB edition</a>.</p>" % SHORT_LINKS["en"]["preface"]
             )
+        s["html"] = layout_tables(s["html"], s["id"])
         s["html"], s["toc"] = add_heading_ids(s["html"], lang_key)
         if lang_key == "en" and s["id"] in QUICK_ANSWERS:
             s["html"] = inject_quick_answers(s["html"], s["id"])
@@ -1268,8 +1377,6 @@ def build_lang(lang_key):
                .replace("__CONTENT__", content_for(sections, i, cfg["prev_label"], cfg["next_label"], lang_key))
                .replace("__SIDENOTE__", cfg["sidenote_html"])
                .replace("__FOOT_META__", html.escape(cfg["foot_meta"])))
-        out = re.sub(r"<table>", '<div class="table-wrap"><table>', out)
-        out = re.sub(r"</table>", "</table></div>", out)
         open(os.path.join(outdir, fname(s["id"])), "w", encoding="utf-8").write(out)
 
     # 给 AI/LLM 抓取用的全文纯文本版（原始 Markdown 源文件，逐字复制）
