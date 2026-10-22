@@ -27,6 +27,8 @@ LANGS = {
         sidenote_html='全文免费在线阅读。另有排版好的中英双语 <a href="%s">PDF / EPUB 版本</a>，在 Gumroad 有售。<br><a href="https://github.com/koemia/llmknowledge" data-umami-event="github-star-click" data-umami-event-position="sidebar-zh">⭐ 在 GitHub 上点个 star</a>',
         foot_meta="第 2 版 · 2026 年 10 月",
         switch_label="中文",
+        theme_label="切换日间 / 夜间",
+        pagetoc_label="本页目录",
         links={"zh": "", "en": "../"},
     ),
     "en": dict(
@@ -44,6 +46,8 @@ LANGS = {
         sidenote_html='Free to read online in full. A typeset <a href="%s">PDF + EPUB edition</a>, in English and Chinese, is also available on Gumroad.<br><a href="https://github.com/koemia/llmknowledge" data-umami-event="github-star-click" data-umami-event-position="sidebar-en">⭐ Star it on GitHub</a>',
         foot_meta="2nd Edition · October 2026",
         switch_label="EN",
+        theme_label="Switch day / night",
+        pagetoc_label="On this page",
         links={"zh": "zh/", "en": ""},
     ),
 }
@@ -380,6 +384,10 @@ __HREFLANG__
 __FONTS_LINK__
 <style>
 __ROOT_CSS__
+/* 日间 / 夜间：默认跟随系统；侧栏按钮可手动切换，选择存在 localStorage */
+:root{--sidebar:#2A2924;--strong:#2E2C26;--code-ink:#3A3226;--on-accent:#fff;--fig-bg:transparent;--fig-pad:0;color-scheme:light}
+:root[data-theme="dark"]{--paper:#141311;--column:#22211D;--ink:#ECE5D5;--text:#C9C2B3;--muted:#968F80;--accent:#7FB79C;--accent-ink:#A3D2BA;--accent-soft:#2A3A31;--rule:#38362F;--tint:#28302A;--tint-line:#3B4A40;--code-bg:#2F2D27;--sidebar:#1C1B18;--strong:#EFE9DB;--code-ink:#E2DACA;--on-accent:#14201A;--fig-bg:#F3EEE3;--fig-pad:14px;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#141311;--column:#22211D;--ink:#ECE5D5;--text:#C9C2B3;--muted:#968F80;--accent:#7FB79C;--accent-ink:#A3D2BA;--accent-soft:#2A3A31;--rule:#38362F;--tint:#28302A;--tint-line:#3B4A40;--code-bg:#2F2D27;--sidebar:#1C1B18;--strong:#EFE9DB;--code-ink:#E2DACA;--on-accent:#14201A;--fig-bg:#F3EEE3;--fig-pad:14px;color-scheme:dark}}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
@@ -397,7 +405,7 @@ a:hover{color:var(--accent-ink)}
 /* ---------- 侧栏 ---------- */
 .sidebar{
   position:fixed;top:0;left:0;width:var(--side-w);height:100vh;
-  background:var(--ink);color:#DBD5C7;display:flex;flex-direction:column;
+  background:var(--sidebar);color:#DBD5C7;display:flex;flex-direction:column;
   z-index:50;border-right:1px solid #17160F;
 }
 .brand{padding:34px 30px 22px;border-bottom:1px solid rgba(255,255,255,.09)}
@@ -415,7 +423,7 @@ a:hover{color:var(--accent-ink)}
   border-radius:999px;overflow:hidden;font-size:13px}
 .lang-switch a{background:transparent;border:0;color:#A9AF9E;
   padding:5px 14px;cursor:pointer;font-family:var(--serif);letter-spacing:.05em;display:inline-block}
-.lang-switch a[aria-current="page"]{background:var(--accent);color:#fff}
+.lang-switch a[aria-current="page"]{background:var(--accent);color:var(--on-accent)}
 
 .toc{flex:1;overflow-y:auto;padding:16px 16px 8px}
 .toc .toc-h{font-size:11px;letter-spacing:.22em;text-transform:uppercase;
@@ -461,7 +469,7 @@ a:hover{color:var(--accent-ink)}
   padding-left:14px;border-left:3px solid var(--accent)}
 .doc h4{font-size:17px;font-weight:600;color:var(--ink);margin:30px 0 10px}
 .doc p{margin:0 0 18px}
-.doc strong{font-weight:600;color:#2E2C26}
+.doc strong{font-weight:600;color:var(--strong)}
 .doc em{font-style:normal;background:linear-gradient(transparent 62%,var(--accent-soft) 62%);
   padding:0 1px}
 .doc ul,.doc ol{margin:0 0 20px;padding-left:1.35em}
@@ -470,7 +478,7 @@ a:hover{color:var(--accent-ink)}
 
 /* 行内代码与术语 */
 .doc code{font-family:var(--mono);font-size:.86em;background:var(--code-bg);
-  padding:.12em .4em;border-radius:4px;color:#3A3226}
+  padding:.12em .4em;border-radius:4px;color:var(--code-ink)}
 .doc pre{background:#26251F;color:#E9E3D5;padding:18px 20px;border-radius:6px;
   overflow-x:auto;margin:0 0 20px;font-size:14px;line-height:1.7}
 .doc pre code{background:none;color:inherit;padding:0}
@@ -480,7 +488,7 @@ a:hover{color:var(--accent-ink)}
   border:1px solid var(--tint-line);border-left:4px solid var(--accent);
   border-radius:4px;position:relative}
 .doc blockquote::before{content:"注";position:absolute;top:-11px;left:18px;
-  background:var(--accent-ink);color:#fff;font-family:var(--serif);font-size:11px;
+  background:var(--accent-ink);color:var(--on-accent);font-family:var(--serif);font-size:11px;
   letter-spacing:.12em;padding:2px 9px;border-radius:3px}
 .doc blockquote>*:first-child{margin-top:0}
 .doc blockquote>*:last-child{margin-bottom:0}
@@ -503,7 +511,8 @@ a:hover{color:var(--accent-ink)}
 
 /* 插图 */
 .doc figure{margin:28px 0;text-align:center}
-.doc figure img{width:100%;max-width:100%;height:auto;border-radius:6px}
+.doc figure img{width:100%;max-width:100%;height:auto;border-radius:6px;
+  background:var(--fig-bg);padding:var(--fig-pad)}  /* 示意图是透明底，夜间垫浅色底 */
 .doc figcaption{margin-top:10px;font-family:var(--serif);font-style:italic;
   font-size:13.5px;color:var(--muted);line-height:1.6}
 
@@ -557,6 +566,46 @@ a:hover{color:var(--accent-ink)}
 .pager-ttl{font-size:14px;color:var(--ink);font-weight:500}
 .pager-spacer{flex:1}
 
+/* 日夜切换按钮 */
+.brand-tools{display:flex;align-items:stretch;gap:10px;margin-top:18px}
+.brand-tools .lang-switch{margin-top:0}
+/* 圆形按钮，图标显示当前模式（日间太阳、夜间月亮）；高度跟随旁边的语言切换 */
+.theme-toggle{flex:none;width:36px;padding:0;border-radius:999px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  background:transparent;border:1px solid rgba(255,255,255,.2);color:#A9AF9E}
+.theme-toggle:hover{color:#F5F0E4;border-color:rgba(255,255,255,.45)}
+.theme-toggle svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+.theme-toggle .i-moon{display:none}
+:root[data-theme="dark"] .theme-toggle .i-sun{display:none}
+:root[data-theme="dark"] .theme-toggle .i-moon{display:block}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .theme-toggle .i-sun{display:none}
+  :root:not([data-theme="light"]) .theme-toggle .i-moon{display:block}
+}
+
+/* 本页目录：宽屏放在阅读栏右侧，窄屏收在章首 */
+.pagetoc{display:none}
+.pagetoc-h{font-family:var(--serif);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+  color:#8C877A;font-weight:600;margin:0 0 12px}
+.pagetoc ol,.pagetoc-inline ol{list-style:none;margin:0;padding:0}
+.pagetoc a{display:block;padding:6px 0 6px 12px;border-left:2px solid rgba(255,255,255,.1);
+  color:#A9A393;font-size:13.5px;line-height:1.45}
+.pagetoc a:hover{color:#F5F0E4}
+.pagetoc a.on{color:#9CCDB4;border-left-color:#7FB79C}
+.pagetoc-inline{margin:-6px 0 30px;padding:10px 16px;border:1px solid var(--rule);border-radius:6px;font-size:15px}
+.pagetoc-inline summary{cursor:pointer;font-weight:600;color:var(--ink)}
+.pagetoc-inline ol{margin-top:8px}
+.pagetoc-inline li{margin:5px 0;line-height:1.5}
+@media (min-width:1240px){
+  .main.has-toc{display:grid;grid-template-columns:minmax(0,var(--col-w)) 220px;
+    column-gap:40px;justify-content:center}
+  .main.has-toc .reader{max-width:none}
+  .pagetoc{display:block;position:sticky;top:0;align-self:start;max-height:100vh;
+    overflow-y:auto;padding:84px 0 40px}
+  .pagetoc-inline{display:none}
+}
+
 /* 页脚 */
 .colophon{max-width:var(--col-w);margin:8px auto 0;padding:0 0 64px}
 .foot-meta{margin-top:26px;font-family:var(--serif);font-style:italic;
@@ -578,9 +627,11 @@ a:hover{color:var(--accent-ink)}
   .topbar{display:flex;align-items:center;gap:14px;position:sticky;top:0;
     z-index:30;background:rgba(32,30,26,.92);backdrop-filter:blur(8px);
     padding:12px 16px;margin:0 -16px 0;border-bottom:1px solid rgba(255,255,255,.08)}
-  .menu-btn{background:var(--accent);color:#fff;border:0;border-radius:8px;
+  .topbar .theme-toggle{width:40px;height:40px}
+  .menu-btn{background:var(--accent);color:var(--on-accent);border:0;border-radius:8px;
     width:40px;height:40px;font-size:18px;cursor:pointer;flex:none}
-  .topbar .tb-title{font-weight:600;color:#EFE9DB;font-size:15px}
+  .topbar .tb-title{font-weight:600;color:#EFE9DB;font-size:15px;flex:1;min-width:0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .topbar .tb-title .tb-sub{font-family:var(--serif);font-style:italic;
     color:#A9AF9E;font-weight:400}
   .reader{padding:26px 0 30px}
@@ -593,6 +644,7 @@ a:hover{color:var(--accent-ink)}
 }
 @media (max-width:560px){
   body{font-size:16px}
+  .topbar .tb-sub{display:none}
   .chapter{padding:26px 18px 24px}
   .doc table{font-size:14px}
   .pager a{max-width:100%}
@@ -607,6 +659,7 @@ a:hover{color:var(--accent-ink)}
   .sidebar{transition:none}
 }
 </style>
+<script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 __ANALYTICS__
 </head>
 <body>
@@ -617,7 +670,7 @@ __ANALYTICS__
     <div class="kicker">A Field Guide</div>
     <__BRAND_TAG__ class="bt"><a href="__HOME_HREF__">__BOOK_TITLE__</a></__BRAND_TAG__>
     <div class="sub">__BOOK_SUB__</div>
-    __LANG_SWITCH__
+    <div class="brand-tools">__LANG_SWITCH____THEME_SWITCH__</div>
   </div>
   <nav class="toc" id="toc">
     <div class="toc-h">__TOC_LABEL__</div>
@@ -629,10 +682,11 @@ __ANALYTICS__
 </aside>
 <div class="scrim" id="scrim"></div>
 
-<main class="main">
+<main class="main__MAIN_CLASS__">
   <div class="topbar">
     <button class="menu-btn" id="menuBtn" aria-label="__MENU_ARIA__">☰</button>
     <div class="tb-title">__BOOK_TITLE__ <span class="tb-sub">· __BOOK_SUB__</span></div>
+    __THEME_SWITCH__
   </div>
   <div class="reader">
     __CONTENT__
@@ -641,6 +695,7 @@ __ANALYTICS__
       <div class="foot-meta">__FOOT_META__</div>
     </div>
   </div>
+  __PAGETOC__
 </main>
 
 <script>
@@ -677,6 +732,29 @@ __ANALYTICS__
   },{passive:true});
   window.addEventListener('resize',onScroll);
   onScroll();
+
+  // 日夜切换：图标由 CSS 按当前模式显示；点击切到另一种并记住（未手动选择时跟随系统）
+  var root=document.documentElement, mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
+  function isDark(){var t=root.getAttribute('data-theme');return t?t==='dark':!!(mq&&mq.matches);}
+  [].slice.call(document.querySelectorAll('.theme-toggle')).forEach(function(b){b.addEventListener('click',function(){
+    var v=isDark()?'light':'dark';root.setAttribute('data-theme',v);
+    try{localStorage.setItem('theme',v);}catch(e){}
+  });});
+
+  // 本页目录：高亮当前小节
+  var heads=[].slice.call(document.querySelectorAll('.doc h3[id]'));
+  var tocLinks=[].slice.call(document.querySelectorAll('.pagetoc a'));
+  if(heads.length&&tocLinks.length){
+    var spy=function(){
+      var cur=null;
+      heads.forEach(function(h){if(h.getBoundingClientRect().top<120)cur=h.id;});
+      tocLinks.forEach(function(a){a.classList.toggle('on',a.getAttribute('href')==='#'+cur);});
+    };
+    window.addEventListener('scroll',spy,{passive:true});spy();
+  }
+  [].slice.call(document.querySelectorAll('.pagetoc-inline a')).forEach(function(a){
+    a.addEventListener('click',function(){a.closest('details').open=false;});
+  });
 })();
 </script>
 </body>
@@ -718,6 +796,61 @@ def hreflang_tags(sec_id):
     return "\n".join(tags)
 
 
+SUN_SVG = ('<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/>'
+           '<path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2'
+           'M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>')
+MOON_SVG = ('<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true">'
+            '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>')
+
+
+def theme_switch_html(cfg):
+    return ('<button class="theme-toggle" type="button" aria-label="%s" title="%s">%s%s</button>'
+            % (cfg["theme_label"], cfg["theme_label"], SUN_SVG, MOON_SVG))
+
+
+def add_heading_ids(section_html, lang_key):
+    """给正文 h3 加锚点并返回本页目录条目 [(id, 短标题, 完整标题)]。
+    书稿里用 attr_list 写了 {#id} 的保留原样；英文按标题文字生成，中文用 sec-N。"""
+    toc, used = [], set()
+
+    def sub(m):
+        attrs, inner = m.group(1), m.group(2)
+        full = html.unescape(re.sub(r"<[^>]+>", "", inner)).strip()
+        found = re.search(r'id="([^"]+)"', attrs)
+        if found:
+            hid = found.group(1)
+        else:
+            hid = re.sub(r"[^a-z0-9]+", "-", full.lower()).strip("-") if lang_key == "en" else ""
+            if len(hid) > 60:
+                hid = hid[:61].rsplit("-", 1)[0]  # 在词边界截断
+            if not hid:
+                hid = "sec-%d" % (len(toc) + 1)
+            base, k = hid, 2
+            while hid in used:
+                hid, k = "%s-%d" % (base, k), k + 1
+            attrs = attrs + ' id="%s"' % hid
+        used.add(hid)
+        short = re.split(r"[:：]", full, maxsplit=1)[0].strip() or full
+        toc.append((hid, short, full))
+        return "<h3%s>%s</h3>" % (attrs, inner)
+
+    return re.sub(r"<h3([^>]*)>(.*?)</h3>", sub, section_html, flags=re.S), toc
+
+
+def pagetoc_items(toc):
+    return "\n".join('<li><a href="#%s" title="%s">%s</a></li>'
+                     % (hid, html.escape(full, quote=True), html.escape(short))
+                     for hid, short, full in toc)
+
+
+def pagetoc_html(lang_key, toc):
+    """宽屏右侧栏；没有小标题的章节不出这一栏。"""
+    if not toc:
+        return ""
+    return ('<nav class="pagetoc" aria-label="%s"><p class="pagetoc-h">%s</p><ol>%s</ol></nav>'
+            % (LANGS[lang_key]["pagetoc_label"], LANGS[lang_key]["pagetoc_label"], pagetoc_items(toc)))
+
+
 def content_for(sections, i, prev_label, next_label, lang_key):
     s = sections[i]
     prev_s = sections[i - 1] if i > 0 else None
@@ -737,15 +870,18 @@ def content_for(sections, i, prev_label, next_label, lang_key):
     pn.append("</nav>")
     pager = "\n".join(pn)
     extra = endnote_html(lang_key, s["id"]) if s.get("is_end") else ""
+    toc = s.get("toc")
+    inline_toc = ('<details class="pagetoc-inline"><summary>%s</summary><ol>%s</ol></details>\n  '
+                  % (LANGS[lang_key]["pagetoc_label"], pagetoc_items(toc))) if toc else ""
     return ('<section id="%s" class="chapter" data-section="%s">\n'
             '  <header class="ch-head">\n    %s\n'
             '    <div class="ch-meta">\n'
             '      <div class="eyebrow">%s</div>\n'
             '      <h2 class="ch-title">%s</h2>\n'
             '    </div>\n  </header>\n'
-            '  <div class="doc">\n    %s\n  </div>\n  %s\n  %s\n</section>'
+            '  %s<div class="doc">\n    %s\n  </div>\n  %s\n  %s\n</section>'
             % (s["id"], s["id"], numeral_html, s["eyebrow"],
-               html.escape(s["title"]), s["html"], extra, pager))
+               html.escape(s["title"]), inline_toc, s["html"], extra, pager))
 
 
 # ===== 入口页（/ 和 /zh/）：版式在这里，文案全部在 content/landing.yaml =====
@@ -1094,6 +1230,7 @@ def build_lang(lang_key):
                 'If you\'d rather read it off the browser, there\'s a <a href="%s">'
                 "typeset PDF + EPUB edition</a>.</p>" % SHORT_LINKS["en"]["preface"]
             )
+        s["html"], s["toc"] = add_heading_ids(s["html"], lang_key)
         if lang_key == "en" and s["id"] in QUICK_ANSWERS:
             s["html"] = inject_quick_answers(s["html"], s["id"])
 
@@ -1125,6 +1262,9 @@ def build_lang(lang_key):
                .replace("__MENU_ARIA__", html.escape(cfg["menu_aria"]))
                .replace("__LANG_SWITCH__", lang_switch_html(lang_key, s["id"]))
                .replace("__NAV__", nav_html_for(sections, s["id"]))
+               .replace("__MAIN_CLASS__", " has-toc" if s["toc"] else "")
+               .replace("__PAGETOC__", pagetoc_html(lang_key, s["toc"]))
+               .replace("__THEME_SWITCH__", theme_switch_html(cfg))
                .replace("__CONTENT__", content_for(sections, i, cfg["prev_label"], cfg["next_label"], lang_key))
                .replace("__SIDENOTE__", cfg["sidenote_html"])
                .replace("__FOOT_META__", html.escape(cfg["foot_meta"])))
@@ -1285,6 +1425,9 @@ def build_answers(sections):
                .replace("__MENU_ARIA__", html.escape(cfg["menu_aria"]))
                .replace("__LANG_SWITCH__", "")
                .replace("__NAV__", nav_html_for(sections, a["chapter"], prefix="../"))
+               .replace("__MAIN_CLASS__", "")
+               .replace("__PAGETOC__", "")
+               .replace("__THEME_SWITCH__", theme_switch_html(cfg))
                .replace("__CONTENT__", answer_content(a))
                .replace("__SIDENOTE__", cfg["sidenote_html"])
                .replace("__FOOT_META__", html.escape(cfg["foot_meta"])))
