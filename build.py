@@ -200,6 +200,7 @@ SHORT_LINKS = {
         "ch7": "https://ymjr.de/llmbook-en-ch7",
         "appendix": "https://ymjr.de/llmbook-en-appendix",
         "cheatsheet": "https://ymjr.de/llmbook-en-cheat",
+        "answers": "https://ymjr.de/llmbook-en-answers",
     },
     "zh": {
         "sidebar": "https://ymjr.de/llmbook-zh-sidebar",
@@ -402,10 +403,10 @@ a:hover{color:var(--accent-ink)}
 .brand{padding:34px 30px 22px;border-bottom:1px solid rgba(255,255,255,.09)}
 .brand .kicker{font-family:var(--serif);font-size:12px;letter-spacing:.32em;
   text-transform:uppercase;color:#A89F8C;font-weight:600;margin-bottom:12px}
-.brand h1{margin:0;font-weight:700;font-size:23px;line-height:1.3;color:#F5F0E4;
+.brand .bt{margin:0;font-weight:700;font-size:23px;line-height:1.3;color:#F5F0E4;
   letter-spacing:.01em}
-.brand h1 a{color:inherit}
-.brand h1::after{content:"";display:block;width:46px;height:2px;
+.brand .bt a{color:inherit}
+.brand .bt::after{content:"";display:block;width:46px;height:2px;
   background:var(--accent);margin-top:13px;border-radius:2px}
 .brand .sub{font-family:var(--serif);font-style:italic;font-size:15px;
   color:#A9AF9E;margin-top:12px}
@@ -455,7 +456,7 @@ a:hover{color:var(--accent-ink)}
 /* 正文排版 */
 .doc{color:var(--text)}
 .doc>*:first-child{margin-top:0}
-.doc h3{font-size:20px;font-weight:600;color:var(--ink);margin:44px 0 14px;
+.doc h2,.doc h3{font-size:20px;font-weight:600;color:var(--ink);margin:44px 0 14px;
   line-height:1.5;letter-spacing:.005em;
   padding-left:14px;border-left:3px solid var(--accent)}
 .doc h4{font-size:17px;font-weight:600;color:var(--ink);margin:30px 0 10px}
@@ -526,6 +527,22 @@ a:hover{color:var(--accent-ink)}
 .endnote a{color:var(--accent)}
 .endnote a:hover{color:var(--accent-ink)}
 .endnote .note-fine{color:var(--muted);font-size:13.5px}
+
+/* 问答页（/answers/）与章节页里指向它们的小框 */
+.short-answer{margin:0 0 30px;padding:18px 22px;background:var(--tint);
+  border:1px solid var(--tint-line);border-radius:6px}
+.short-answer p{margin:0}
+.doc sup.cite{font-size:.75em;font-weight:600}
+.related{margin-top:34px}
+.related h2{margin-top:0}
+.doc ol.sources{font-size:14.5px;color:var(--muted);padding-left:1.4em}
+.doc ol.sources li{margin-bottom:8px;line-height:1.7;overflow-wrap:anywhere}
+.quick-answers{margin:24px 0;padding:16px 22px;background:var(--tint);
+  border:1px solid var(--tint-line);border-radius:6px}
+.quick-answers .qa-h{margin:0 0 6px;font-family:var(--serif);font-weight:600;font-size:12.5px;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--accent-ink)}
+.doc .quick-answers ul{margin:0}
+.doc .quick-answers li{margin:0 0 4px}
 
 /* 章末上一章/下一章 */
 .pager{display:flex;justify-content:space-between;gap:18px;
@@ -598,7 +615,7 @@ __ANALYTICS__
 <aside class="sidebar" id="sidebar">
   <div class="brand">
     <div class="kicker">A Field Guide</div>
-    <h1><a href="./">__BOOK_TITLE__</a></h1>
+    <__BRAND_TAG__ class="bt"><a href="__HOME_HREF__">__BOOK_TITLE__</a></__BRAND_TAG__>
     <div class="sub">__BOOK_SUB__</div>
     __LANG_SWITCH__
   </div>
@@ -666,7 +683,7 @@ __ANALYTICS__
 </html>'''
 
 
-def nav_html_for(sections, active_id):
+def nav_html_for(sections, active_id, prefix=""):
     items = []
     for s in sections:
         marker = s["numeral"] if s["numeral"] else "·"
@@ -675,7 +692,7 @@ def nav_html_for(sections, active_id):
             '<a class="nav-item%s" href="%s" data-target="%s">'
             '<span class="nav-mark">%s</span>'
             '<span class="nav-label">%s</span></a>'
-            % (active, rel_href("", s["id"]), s["id"], marker, html.escape(s["nav"]))
+            % (active, rel_href(prefix, s["id"]), s["id"], marker, html.escape(s["nav"]))
         )
     return "\n".join(items)
 
@@ -814,6 +831,9 @@ h2{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:clamp(24p
 .src{font-size:13px;color:var(--muted)}
 .src a{color:inherit;text-decoration:underline;text-decoration-color:var(--tint-line);text-underline-offset:3px}
 .src a:hover{color:var(--accent-ink);text-decoration-color:var(--accent)}
+.qa{font-size:14px;font-weight:600;color:var(--accent-ink);text-decoration:underline;
+  text-decoration-color:var(--accent);text-underline-offset:3px}
+.qa:hover{color:var(--accent)}
 .num{font-family:var(--serif);color:var(--accent-ink);font-weight:600;font-variant-numeric:tabular-nums}
 
 /* 目录：整行是链接，右侧箭头 */
@@ -937,6 +957,9 @@ def landing_content(lang_key, t):
         href = rel_href("", f["chapter"]) + ("#" + f["anchor"] if f.get("anchor") else "")
         why = inline_md(f["why"]).replace("<strong>", '<strong class="num">')
         src = '<span class="src">%s</span>' % inline_md(f["source"]) if f.get("source") else ""
+        # 可选：这条事实有对应问答页时，在章节按钮旁加一个次要链接（问答页只有英文）
+        if f.get("answer"):
+            src = '<a class="qa" href="answers/%s">Quick answer →</a>' % f["answer"] + src
         mark = ('<span class="mark" aria-hidden="true">%s</span>' % html.escape(str(f["emoji"]))
                 if f.get("emoji") else "")
         items.append('  <li class="fitem">\n'
@@ -1071,6 +1094,8 @@ def build_lang(lang_key):
                 'If you\'d rather read it off the browser, there\'s a <a href="%s">'
                 "typeset PDF + EPUB edition</a>.</p>" % SHORT_LINKS["en"]["preface"]
             )
+        if lang_key == "en" and s["id"] in QUICK_ANSWERS:
+            s["html"] = inject_quick_answers(s["html"], s["id"])
 
     outdir = cfg["outdir"]
     os.makedirs(outdir, exist_ok=True)
@@ -1092,6 +1117,8 @@ def build_lang(lang_key):
                .replace("__HEAD_META__", head_meta_for(lang_key, cfg, s["id"]))
                .replace("__CANONICAL__", '<link rel="canonical" href="%s">' % url_for(cfg, s["id"]))
                .replace("__HREFLANG__", hreflang_tags(s["id"]))
+               .replace("__BRAND_TAG__", "h1")
+               .replace("__HOME_HREF__", "./")
                .replace("__BOOK_TITLE__", html.escape(cfg["book_title"]))
                .replace("__BOOK_SUB__", html.escape(cfg["book_sub"]))
                .replace("__TOC_LABEL__", html.escape(cfg["toc_label"]))
@@ -1111,6 +1138,160 @@ def build_lang(lang_key):
     return sections
 
 
+# ===== 问答页（/answers/<slug>，只有英文）：每页回答一个具体问题，内容取自章节正文与脚注 =====
+# 源文件 content/answers/<slug>.en.md：开头 front matter（title、description、h1、chapter、
+# published、related、short、sources），后面是正文 Markdown。正文里用 [1]、[2] 引用 sources。
+ANSWERS_DIR = "content/answers"
+ANSWERS_OUTDIR = "site/answers"
+ANSWERS_EYEBROW = "QUICK ANSWER"
+
+
+def load_answers():
+    answers = {}
+    if not os.path.isdir(ANSWERS_DIR):
+        return answers
+    for fn in sorted(os.listdir(ANSWERS_DIR)):
+        if not fn.endswith(".en.md"):
+            continue
+        raw = open(os.path.join(ANSWERS_DIR, fn), encoding="utf-8").read()
+        _, front, body = raw.split("---\n", 2)
+        a = yaml.safe_load(front)
+        a["slug"] = fn[:-len(".en.md")]
+        a["body"] = body.strip()
+        answers[a["slug"]] = a
+    return answers
+
+
+ANSWERS = load_answers()
+
+
+def answer_url(slug):
+    return "%s/answers/%s" % (BASE_URL, slug)
+
+
+def link_citations(body_html):
+    """正文里的 [1]、[2] 链到页末 Sources 对应条目。"""
+    return re.sub(r"\[(\d+)\]", r'<sup class="cite"><a href="#src-\1">[\1]</a></sup>', body_html)
+
+
+# 章节网页版里指向问答页的小框（只在 HTML 注入，不改书稿，PDF/EPUB 不受影响）。
+# 键是章节 id；值是（插入位置：含这段文字的段落之后，问答页 slug 列表）。
+QUICK_ANSWERS = {
+    "ch5": ("two separate questions", ["can-embeddings-be-reversed", "openai-api-data-retention"]),
+    "ch6": ("became the exfiltration channel", ["echoleak-explained"]),
+}
+
+
+def inject_quick_answers(section_html, sec_id):
+    marker, slugs = QUICK_ANSWERS[sec_id]
+    at = section_html.find(marker)
+    if at < 0:
+        raise SystemExit("quick answers: marker %r not found in %s" % (marker, sec_id))
+    end = section_html.index("</p>", at) + len("</p>")
+    items = "".join('<li><a href="answers/%s">%s</a></li>' % (sl, html.escape(ANSWERS[sl]["h1"]))
+                    for sl in slugs)
+    box = ('\n<aside class="quick-answers"><p class="qa-h">Quick answers</p><ul>%s</ul></aside>'
+           % items)
+    return section_html[:end] + box + section_html[end:]
+
+
+def answer_jsonld(a):
+    data = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": a["h1"],
+        "description": a["description"],
+        "author": {"@type": "Person", "name": "koe"},
+        "datePublished": a["published"],
+        "dateModified": a.get("modified", a["published"]),
+        "mainEntityOfPage": answer_url(a["slug"]),
+        "image": og_image_url("en"),
+        "inLanguage": "en",
+        "isPartOf": {"@type": "Book", "name": BOOK_NAMES["en"], "url": url_for(LANGS["en"], "home")},
+    }
+    return ('<script type="application/ld+json">\n%s\n</script>'
+            % json.dumps(data, ensure_ascii=False, indent=1).replace("</", "<\\/"))
+
+
+def answer_head_meta(a):
+    cfg = LANGS["en"]
+    title = html.escape(a["title"], quote=True)
+    desc = html.escape(a["description"], quote=True)
+    return "\n".join([
+        '<meta name="description" content="%s">' % desc,
+        '<meta property="og:type" content="article">',
+        '<meta property="og:site_name" content="%s">' % html.escape(cfg["book_title"], quote=True),
+        '<meta property="og:title" content="%s">' % title,
+        '<meta property="og:description" content="%s">' % desc,
+        '<meta property="og:url" content="%s">' % answer_url(a["slug"]),
+        '<meta property="og:locale" content="en_US">',
+        '<meta property="og:image" content="%s">' % og_image_url("en"),
+        '<meta property="og:image:width" content="2400">',
+        '<meta property="og:image:height" content="1260">',
+        '<meta property="og:image:alt" content="%s">' % html.escape(cfg["book_title"], quote=True),
+        '<meta name="twitter:card" content="summary_large_image">',
+        answer_jsonld(a),
+    ])
+
+
+def answer_content(a):
+    md = markdown.Markdown(extensions=["tables", "attr_list"])
+    short = md.convert("**Short answer:** " + a["short"])
+    md.reset()
+    body = md.convert(a["body"])
+    related = "".join('<li><a href="%s">%s</a></li>' % (sl, html.escape(ANSWERS[sl]["h1"]))
+                      for sl in a.get("related", []))
+    sources = "".join('<li id="src-%d">%s <a href="%s">%s</a></li>'
+                      % (n, inline_md(src["text"]), html.escape(src["url"], quote=True),
+                         html.escape(src["url"]))
+                      for n, src in enumerate(a["sources"], 1))
+    foot = ('<div class="endnote"><p>This answer is drawn from <em>Understanding Modern LLM Systems</em>, '
+            'a free field guide. <a href="../preface">Read it online →</a> · '
+            '<a href="%s">PDF + EPUB</a></p></div>' % SHORT_LINKS["en"]["answers"])
+    return ('<article id="answer" class="chapter answer">\n'
+            '  <header class="ch-head">\n'
+            '    <div class="ch-meta">\n'
+            '      <div class="eyebrow">%s</div>\n'
+            '      <h1 class="ch-title">%s</h1>\n'
+            '    </div>\n  </header>\n'
+            '  <div class="doc">\n'
+            '    <div class="short-answer">%s</div>\n'
+            '    %s\n'
+            '    <section class="related"><h2>Related answers</h2><ul>%s</ul></section>\n'
+            '    <h2>Sources</h2>\n    <ol class="sources">%s</ol>\n'
+            '  </div>\n  %s\n</article>'
+            % (ANSWERS_EYEBROW, html.escape(a["h1"]), link_citations(short), link_citations(body),
+               related, sources, foot))
+
+
+def build_answers(sections):
+    cfg = LANGS["en"]
+    os.makedirs(ANSWERS_OUTDIR, exist_ok=True)
+    for a in ANSWERS.values():
+        out = (TEMPLATE
+               .replace("__ROOT_CSS__", ROOT_CSS)
+               .replace("__FONTS_LINK__", fonts_link("en"))
+               .replace("__ANALYTICS__", ANALYTICS_HTML)
+               .replace("__LANG__", cfg["lang_code"])
+               .replace("__PAGE_TITLE__", html.escape(a["title"]))
+               .replace("__HEAD_META__", answer_head_meta(a))
+               .replace("__CANONICAL__", '<link rel="canonical" href="%s">' % answer_url(a["slug"]))
+               .replace("__HREFLANG__", "")
+               .replace("__BRAND_TAG__", "div")
+               .replace("__HOME_HREF__", "../")
+               .replace("__BOOK_TITLE__", html.escape(cfg["book_title"]))
+               .replace("__BOOK_SUB__", html.escape(cfg["book_sub"]))
+               .replace("__TOC_LABEL__", html.escape(cfg["toc_label"]))
+               .replace("__MENU_ARIA__", html.escape(cfg["menu_aria"]))
+               .replace("__LANG_SWITCH__", "")
+               .replace("__NAV__", nav_html_for(sections, a["chapter"], prefix="../"))
+               .replace("__CONTENT__", answer_content(a))
+               .replace("__SIDENOTE__", cfg["sidenote_html"])
+               .replace("__FOOT_META__", html.escape(cfg["foot_meta"])))
+        open(os.path.join(ANSWERS_OUTDIR, a["slug"] + ".html"), "w", encoding="utf-8").write(out)
+    return len(ANSWERS)
+
+
 def write_sitemap(sections_by_lang):
     today = date.today().isoformat()
     # 入口页在最前；各语言章节一一对应，用英文版的顺序即可
@@ -1126,6 +1307,10 @@ def write_sitemap(sections_by_lang):
                 "  <url>\n    <loc>%s</loc>\n    <lastmod>%s</lastmod>\n%s\n  </url>"
                 % (url_for(cfg, sec_id), today, "\n".join(alt))
             )
+    # 问答页只有英文，不写 hreflang
+    for slug_ in ANSWERS:
+        blocks.append("  <url>\n    <loc>%s</loc>\n    <lastmod>%s</lastmod>\n  </url>"
+                      % (answer_url(slug_), today))
     xml = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
@@ -1173,6 +1358,11 @@ def write_llms_txt(sections_by_lang):
         lines.append("- [Full text, single file](%s/llms-full.txt)"
                       % (BASE_URL + cfg["url_prefix"].rstrip("/")))
         lines.append("")
+        if lang_key == "en" and ANSWERS:
+            lines.append("## Quick answers")
+            for a in ANSWERS.values():
+                lines.append("- [%s](%s): %s" % (a["h1"], answer_url(a["slug"]), a["description"]))
+            lines.append("")
     open("site/llms.txt", "w", encoding="utf-8").write("\n".join(lines).rstrip() + "\n")
 
 
@@ -1195,6 +1385,10 @@ for lang_key in LANGS:
     sections_by_lang[lang_key] = sections
     total += len(sections) + 1
     print("built %d pages + landing -> %s/" % (len(sections), LANGS[lang_key]["outdir"]))
+
+n_answers = build_answers(sections_by_lang["en"])
+total += n_answers
+print("built %d answer pages -> %s/" % (n_answers, ANSWERS_OUTDIR))
 
 write_sitemap(sections_by_lang)
 write_robots()

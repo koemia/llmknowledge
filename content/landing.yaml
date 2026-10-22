@@ -20,6 +20,7 @@ en:
       link_label: "Chapter 5 · Compliance"
       chapter: ch5
       anchor: ""
+      answer: openai-api-data-retention
       source: "Source: [OpenAI data policy](https://developers.openai.com/api/docs/guides/your-data)"
     - myth: "We deleted the document."
       emoji: "🤨"
@@ -36,6 +37,7 @@ en:
       link_label: "Chapter 5 · Compliance"
       chapter: ch5
       anchor: ""
+      answer: can-embeddings-be-reversed
       source: "Source: [Morris et al., EMNLP 2023](https://arxiv.org/abs/2310.06816)"
     - myth: "It only sees what each user can see."
       emoji: "🚫"
@@ -52,6 +54,7 @@ en:
       link_label: "Chapter 6 · Security"
       chapter: ch6
       anchor: ""
+      answer: echoleak-explained
       source: "Source: [Microsoft advisory](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711)"
     - myth: "The chatbot remembers our conversation."
       emoji: "🤔"
